@@ -134,7 +134,7 @@ async function getLinkList(id: string): Promise<Partial<OST>[]> {
   let arr: Partial<OST>[] = [];
   $links.each((i, el) => {
     const href = el.attributes.find((a) => a.name === "href");
-    arr.push({ unparsed_type: $(el).text(), href: href.value, ost_order: i });
+    arr.push({ unparsed_type: $(el).text(), href: href?.value, ost_order: i });
   });
 
   arr = arr.map((link) => {

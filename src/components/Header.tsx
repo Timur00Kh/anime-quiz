@@ -17,8 +17,8 @@ import {
   Skeleton,
   useColorMode,
 } from "@chakra-ui/react";
-import { useAuth } from "@/utils/useAuth";
 import NextLink from "next/link";
+import { useAuth } from "@/utils/useAuth";
 import { useLanguage } from "@/utils/useLanguage";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 
