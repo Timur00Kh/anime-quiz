@@ -14,6 +14,7 @@ import {
   HStack,
   IconButton,
   useColorModeValue,
+  Skeleton,
 } from "@chakra-ui/react";
 import { useAuth } from "@/utils/useAuth";
 import NextLink from "next/link";
@@ -39,7 +40,7 @@ const translations = {
 };
 
 export function Header() {
-  const { user, login, logout } = useAuth();
+  const { user, login, logout, loading } = useAuth();
   const { language, changeLanguage } = useLanguage();
   const t = translations[language];
   const bgColor = useColorModeValue("white", "gray.800");
@@ -94,7 +95,9 @@ export function Header() {
             {language === 'en' ? 'RU' : 'EN'}
           </Button>
 
-          {user ? (
+          {loading ? (
+            <Skeleton height="32px" width="32px" borderRadius="full" />
+          ) : user ? (
             <Menu>
               <MenuButton>
                 <Avatar

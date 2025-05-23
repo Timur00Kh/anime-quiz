@@ -30,11 +30,11 @@ async function getRandomAnimePool(): Promise<ShikiAPIAnimeSearch[]> {
   
   // Make 3 parallel requests with different search terms
   const searchPromises = randomSyllables.map(syllable => 
-    getAnimes(syllable).catch(() => [])
+    getAnimes({ search: syllable }).catch(() => [])
   );
   
   // Also get some popular anime to ensure we have well-known titles
-  const popularPromise = getAnimes("").catch(() => []);
+  const popularPromise = getAnimes({ order: 'popularity' }).catch(() => []);
   
   const results = await Promise.all([...searchPromises, popularPromise]);
   
