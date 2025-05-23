@@ -1,7 +1,13 @@
-const TOKEN = "-W3G1vS3THMpvK_8ICeugjpp0RvTyMl0L0MGBgvJMXs";
+import { rateLimiter } from "./rateLimiter";
+
 const USER_AGENT = "Api Test";
 export const DOMAIN = "https://shikimori.one";
 export const SHIKIMORI_URL = "https://shikimori.one";
+
+const getToken = () => {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem('shikimori_token') || '';
+};
 
 export interface ShikiAPIAnimeSearch {
   id: number;
@@ -23,22 +29,52 @@ export interface ShikiAPIAnimeSearch {
   released_on: string | null;
 }
 
-export function getAnimes(search: string): Promise<ShikiAPIAnimeSearch[]> {
-  return fetch(`${DOMAIN}/api/animes?search=${search}&limit=20`, {
-    headers: { "User-Agent": USER_AGENT, Authorization: `Bearer ${TOKEN}` },
-  })
-    .then((res) => res.json())
-    .then((animes: ShikiAPIAnimeSearch[]) =>
-      animes.map((anime) => ({
-        ...anime,
-        image: {
-          original: `${DOMAIN}${anime.image.original}`,
-          preview: `${DOMAIN}${anime.image.preview}`,
-          x96: `${DOMAIN}${anime.image.x96}`,
-          x48: `${DOMAIN}${anime.image.x48}`,
-        },
-      }))
-    );
+export interface AnimeSearchParams {
+  search?: string;
+  order?: 'ranked' | 'popularity' | 'name' | 'aired_on' | 'episodes' | 'status' | 'random';
+  status?: 'anons' | 'ongoing' | 'released';
+  season?: string;
+  score?: number;
+  duration?: 'S' | 'D' | 'F';
+  rating?: 'none' | 'g' | 'pg' | 'pg_13' | 'r' | 'r_plus' | 'rx';
+  genre?: string[];
+  studio?: string[];
+  limit?: number;
+  page?: number;
+}
+
+export function getAnimes(params: Partial<AnimeSearchParams> = {}): Promise<ShikiAPIAnimeSearch[]> {
+  const searchParams = new URLSearchParams();
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      if (Array.isArray(value)) {
+        value.forEach(v => searchParams.append(key, v.toString()));
+      } else {
+        searchParams.append(key, value.toString());
+      }
+    }
+  });
+
+  const queryString = searchParams.toString();
+  
+  return rateLimiter.enqueue(() => 
+    fetch(`${DOMAIN}/api/animes${queryString ? `?${queryString}` : ''}`, {
+      headers: { "User-Agent": USER_AGENT, Authorization: `Bearer ${getToken()}` },
+    })
+      .then((res) => res.json())
+      .then((animes: ShikiAPIAnimeSearch[]) =>
+        animes.map((anime) => ({
+          ...anime,
+          image: {
+            original: `${DOMAIN}${anime.image.original}`,
+            preview: `${DOMAIN}${anime.image.preview}`,
+            x96: `${DOMAIN}${anime.image.x96}`,
+            x48: `${DOMAIN}${anime.image.x48}`,
+          },
+        }))
+      )
+  );
 }
 
 export interface IAnime {
@@ -95,19 +131,21 @@ export interface IAnime {
 }
 
 export function getAnime(id: number): Promise<IAnime> {
-  return fetch(`${DOMAIN}/api/animes/${id}`, {
-    headers: { "User-Agent": USER_AGENT, Authorization: `Bearer ${TOKEN}` },
-  })
-    .then((res) => res.json())
-    .then((anime: IAnime) => ({
-      ...anime,
-      image: {
-        original: `${DOMAIN}${anime.image.original}`,
-        preview: `${DOMAIN}${anime.image.preview}`,
-        x96: `${DOMAIN}${anime.image.x96}`,
-        x48: `${DOMAIN}${anime.image.x48}`,
-      },
-    }));
+  return rateLimiter.enqueue(() =>
+    fetch(`${DOMAIN}/api/animes/${id}`, {
+      headers: { "User-Agent": USER_AGENT, Authorization: `Bearer ${getToken()}` },
+    })
+      .then((res) => res.json())
+      .then((anime: IAnime) => ({
+        ...anime,
+        image: {
+          original: `${DOMAIN}${anime.image.original}`,
+          preview: `${DOMAIN}${anime.image.preview}`,
+          x96: `${DOMAIN}${anime.image.x96}`,
+          x48: `${DOMAIN}${anime.image.x48}`,
+        },
+      }))
+  );
 }
 
 export interface IExternalLink {
@@ -123,7 +161,9 @@ export interface IExternalLink {
 }
 
 export function getAnimeExternals(id: number): Promise<IExternalLink[]> {
-  return fetch(`${DOMAIN}/api/animes/${id}/external_links`, {
-    headers: { "User-Agent": USER_AGENT, Authorization: `Bearer ${TOKEN}` },
-  }).then((res) => res.json());
+  return rateLimiter.enqueue(() =>
+    fetch(`${DOMAIN}/api/animes/${id}/external_links`, {
+      headers: { "User-Agent": USER_AGENT, Authorization: `Bearer ${getToken()}` },
+    }).then((res) => res.json())
+  );
 }

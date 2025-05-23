@@ -1,6 +1,6 @@
 "use client";
 
-import { getAnimes, ShikiAPIAnimeSearch } from "@/utils/shikiAPI";
+import { getAnimes, ShikiAPIAnimeSearch, AnimeSearchParams } from "@/utils/shikiAPI";
 import { useEffect, useState } from "react";
 import { useDebounce } from "@uidotdev/usehooks";
 import {
@@ -39,12 +39,15 @@ export default function () {
   };
 
   const loadAnimes = async (s: string) => {
-    
     setIsLoading(true);
     setError(null);
     
     try {
-      const results = await getAnimes(s);
+      const results = await getAnimes({
+        ...(s ? { search: s } : {}),
+        limit: 50,
+        order: 'popularity'
+      });
       setData(results);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
