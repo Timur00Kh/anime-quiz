@@ -1,6 +1,7 @@
 const TOKEN = "-W3G1vS3THMpvK_8ICeugjpp0RvTyMl0L0MGBgvJMXs";
 const USER_AGENT = "Api Test";
-const DOMAIN = "https://shikimori.one";
+export const DOMAIN = "https://shikimori.one";
+export const SHIKIMORI_URL = "https://shikimori.one";
 
 export interface ShikiAPIAnimeSearch {
   id: number;

@@ -13,6 +13,7 @@ import {
   getAnimeExternals,
   IAnime,
   IExternalLink,
+  SHIKIMORI_URL,
 } from "@/utils/shikiAPI";
 import { useToastErr } from "@/utils/useToastErr";
 import { OST } from "@/app/api/getOst/route";
@@ -30,12 +31,21 @@ import {
 } from "@chakra-ui/react";
 import { Skeleton, SkeletonCircle, SkeletonText } from "@chakra-ui/react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
+import { OSTCard } from "@/components/OSTCard";
+import { OSTSkeletonList } from "@/components/OSTSkeleton";
 
-export default function Page({ params, searchParams }) {
-  const id = params.id;
-  const [anime, setAnime] = useState<IAnime>(null);
+export default function Page({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: Record<string, string | string[] | undefined>;
+}): JSX.Element {
+  const id = Number(params.id);
+  const [anime, setAnime] = useState<IAnime | null>(null);
   const [animeExternals, setAnimeExternals] = useState<IExternalLink[]>([]);
   const [osts, setOsts] = useState<OST[]>([]);
+  const [isLoadingOsts, setIsLoadingOsts] = useState(false);
   const toastErr = useToastErr();
 
   useEffect(() => {
@@ -45,6 +55,7 @@ export default function Page({ params, searchParams }) {
         .catch(toastErr);
 
       try {
+        setIsLoadingOsts(true);
         const externalLinks = (await getAnimeExternals(id)) || [];
         setAnimeExternals(externalLinks);
         const waExternal = externalLinks.find((e) => e.kind === "world_art");
@@ -65,10 +76,12 @@ export default function Page({ params, searchParams }) {
           );
           setOsts(data);
         } else {
-          toastErr("У этого аниме нет WA");
+          toastErr(new Error("У этого аниме нет WA"));
         }
       } catch (e) {
-        toastErr(e.message);
+        toastErr(new Error(e instanceof Error ? e.message : String(e)));
+      } finally {
+        setIsLoadingOsts(false);
       }
     })();
   }, [id]);
@@ -122,7 +135,7 @@ export default function Page({ params, searchParams }) {
                 </SkeletonText>
               </Stack>
               <Stack mt={6} justifyContent="end">
-                <Link href={"https://shikimori.me/" + anime?.url}>
+                <Link href={`${SHIKIMORI_URL}${anime?.url}`}>
                   <Button w={"100%"} as="span">
                     Open on Shiki <ExternalLinkIcon mx="2px" />
                   </Button>
@@ -130,34 +143,15 @@ export default function Page({ params, searchParams }) {
               </Stack>
             </CardBody>
           </Card>
-          <Stack>
-            {osts.map((ost) => (
-              <Box mt={6}>
-                <Heading size="md">{ost.title}</Heading>
-                <Heading size="sm">
-                  {ost.unparsed_type}
-                  <Badge
-                    px={2}
-                    py={1}
-                    my={2}
-                    bg={useColorModeValue("gray.50", "gray.800")}
-                    fontWeight={"400"}
-                  >
-                    {ost.type}
-                  </Badge>
-                </Heading>
-                {ost.authors.map((author) => (
-                  <Box>
-                    {author.name} ({author.role})
-                  </Box>
-                ))}
-                <video controls src={"http://www.world-art.ru/" + ost.video} />
-              </Box>
-            ))}
+          <Stack spacing={4} mt={4}>
+            {isLoadingOsts ? (
+              <OSTSkeletonList />
+            ) : (
+              osts.map((ost) => (
+                <OSTCard key={ost.id} ost={ost} />
+              ))
+            )}
           </Stack>
-          <pre>{JSON.stringify(anime, null, 2)}</pre>
-          <pre>{JSON.stringify(animeExternals, null, 2)}</pre>
-          <pre>{JSON.stringify(osts, null, 2)}</pre>
         </Box>
       </Center>
     </Box>
