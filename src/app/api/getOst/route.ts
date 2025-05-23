@@ -37,10 +37,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Кажется нет waId" }, { status: 400 });
   }
 
-  const osts: Partial<OST> = await getLinkList(id);
+  const osts = await getLinkList(id);
   const fullOSTs = [];
 
-  for (let ost of osts) {
+  for (const ost of osts) {
     const fullOst = await getFullOST(ost);
     fullOSTs.push(fullOst);
   }
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(fullOSTs);
 }
 
-async function getFullOST(ost: OST): Promise<OST> {
+async function getFullOST(ost: Partial<OST>): Promise<OST> {
   const html = await fetch(`http://www.world-art.ru/animation/${ost.href}`, {
     cache: "force-cache",
   })
@@ -82,7 +82,7 @@ async function getFullOST(ost: OST): Promise<OST> {
     }
     if (node.type === "tag" && node.tagName === "a") {
       const href = node.attributes.find((e) => e.name === "href");
-      const match = href.value.match(/id=(\d)+/g);
+      const match = href?.value.match(/id=(\d)+/g);
       let id;
       if (match) {
         const [idStr] = match;
@@ -90,23 +90,23 @@ async function getFullOST(ost: OST): Promise<OST> {
       }
 
       authors.push({
-        id,
-        role: currentRole,
-        href: href.value,
+        id: id || 0,
+        role: currentRole || 'Unknown',
+        href: href?.value || '',
         name: $(node).text(),
       });
     }
   }
 
   return {
-    id: ost.id,
+    id: ost.id || 0,
     authors,
-    href: ost.href,
+    href: ost.href || '',
     order: 0,
-    ost_order: ost.ost_order,
+    ost_order: ost.ost_order || 0,
     title,
-    type: ost.type,
-    unparsed_type: ost.unparsed_type,
+    type: ost.type || OstType.UNRECOGNIZED,
+    unparsed_type: ost.unparsed_type || '',
     video: video,
   };
 }
@@ -121,7 +121,7 @@ function getSiblings(sibling: ChildNode): ChildNode[] {
   return siblings.filter(Boolean);
 }
 
-async function getLinkList(id: string): Promise<Partial<OST>> {
+async function getLinkList(id: string): Promise<Partial<OST>[]> {
   const html = await fetch(
     `http://www.world-art.ru/animation/animation_trailers.php?id=${id}`
   )

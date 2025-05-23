@@ -1,38 +1,17 @@
 "use client";
-import {
-  Box,
-  Card,
-  CardBody,
-  Divider,
-  LinkBox,
-  LinkOverlay,
-} from "@chakra-ui/react";
+import { Box, Center, Stack, Button, ButtonGroup, Card, CardBody, Heading } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import {
   getAnime,
   getAnimeExternals,
   IAnime,
   IExternalLink,
-  SHIKIMORI_URL,
 } from "@/utils/shikiAPI";
 import { useToastErr } from "@/utils/useToastErr";
-import { OST } from "@/app/api/getOst/route";
-import {
-  Badge,
-  Button,
-  Center,
-  Flex,
-  Heading,
-  Image,
-  Link,
-  Stack,
-  Text,
-  useColorModeValue,
-} from "@chakra-ui/react";
-import { Skeleton, SkeletonCircle, SkeletonText } from "@chakra-ui/react";
-import { ExternalLinkIcon } from "@chakra-ui/icons";
+import { OST, OstType } from "@/app/api/getOst/route";
 import { OSTCard } from "@/components/OSTCard";
 import { OSTSkeletonList } from "@/components/OSTSkeleton";
+import { AnimeCard, AnimeCardSkeleton } from "@/components/AnimeCard";
 
 export default function Page({
   params,
@@ -45,6 +24,7 @@ export default function Page({
   const [anime, setAnime] = useState<IAnime | null>(null);
   const [animeExternals, setAnimeExternals] = useState<IExternalLink[]>([]);
   const [osts, setOsts] = useState<OST[]>([]);
+  const [selectedType, setSelectedType] = useState<string>("ALL");
   const [isLoadingOsts, setIsLoadingOsts] = useState(false);
   const toastErr = useToastErr();
 
@@ -90,66 +70,49 @@ export default function Page({
     <Box p={5}>
       <Center>
         <Box maxW={600} w="100%">
-          <Card w="100%">
-            <CardBody w="100%">
-              <Center>
-                <Skeleton height={320} isLoaded={!!anime}>
-                  <Image
-                    src={anime?.image?.original || ""}
-                    alt="Green double couch with wooden legs"
-                    borderRadius="lg"
-                  />
-                </Skeleton>
-              </Center>
-              <Stack
-                align={"center"}
-                justify={"center"}
-                direction={"row"}
-                mt={6}
-              >
-                {anime?.genres.map((genre) => (
-                  <Badge
-                    px={2}
-                    py={1}
-                    bg={useColorModeValue("gray.50", "gray.800")}
-                    fontWeight={"400"}
-                  >
-                    {genre.russian}
-                  </Badge>
-                ))}
-              </Stack>
-              <Stack mt="6" spacing="3">
-                <Skeleton isLoaded={!!anime}>
-                  <Heading size="md">{anime?.name}</Heading>
-                </Skeleton>
-                <Skeleton isLoaded={!!anime}>
-                  <Heading size="sm">{anime?.russian}</Heading>
-                </Skeleton>
-                <SkeletonText
-                  noOfLines={4}
-                  spacing="4"
-                  skeletonHeight="2"
-                  isLoaded={!!anime}
+          {anime === null ? <AnimeCardSkeleton /> : <AnimeCard anime={anime} />}
+          
+          <Card mt={6}>
+            <CardBody>
+              <Heading size="sm" mb={4}>Filter OSTs</Heading>
+              <ButtonGroup spacing={2} size="sm">
+                <Button
+                  colorScheme={selectedType === "ALL" ? "blue" : "gray"}
+                  onClick={() => setSelectedType("ALL")}
                 >
-                  <Text>{anime?.description}</Text>
-                </SkeletonText>
-              </Stack>
-              <Stack mt={6} justifyContent="end">
-                <Link href={`${SHIKIMORI_URL}${anime?.url}`}>
-                  <Button w={"100%"} as="span">
-                    Open on Shiki <ExternalLinkIcon mx="2px" />
-                  </Button>
-                </Link>
-              </Stack>
+                  All
+                </Button>
+                <Button
+                  colorScheme={selectedType === OstType.OP ? "blue" : "gray"}
+                  onClick={() => setSelectedType(OstType.OP)}
+                >
+                  Openings
+                </Button>
+                <Button
+                  colorScheme={selectedType === OstType.ED ? "blue" : "gray"}
+                  onClick={() => setSelectedType(OstType.ED)}
+                >
+                  Endings
+                </Button>
+                <Button
+                  colorScheme={selectedType === OstType.TRAILER ? "blue" : "gray"}
+                  onClick={() => setSelectedType(OstType.TRAILER)}
+                >
+                  Trailers
+                </Button>
+              </ButtonGroup>
             </CardBody>
           </Card>
+
           <Stack spacing={4} mt={4}>
             {isLoadingOsts ? (
               <OSTSkeletonList />
             ) : (
-              osts.map((ost) => (
-                <OSTCard key={ost.id} ost={ost} />
-              ))
+              osts
+                .filter(ost => selectedType === "ALL" || ost.type === selectedType)
+                .map((ost) => (
+                  <OSTCard key={ost.id} ost={ost} />
+                ))
             )}
           </Stack>
         </Box>

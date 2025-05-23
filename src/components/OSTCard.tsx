@@ -61,8 +61,14 @@ export function OSTCard({ ost }: OSTCardProps) {
             <Text fontWeight="medium" mb={2}>OST Preview:</Text>
             <video 
               controls 
+              preload="metadata"
               src={"http://www.world-art.ru/" + ost.video}
               style={{ width: '100%', borderRadius: '8px' }}
+              onLoadedMetadata={(e) => {
+                // Set to approximately 10 frames in (assuming 30fps)
+                const video = e.currentTarget;
+                video.currentTime = 0.33;
+              }}
             />
           </Box>
         </Stack>
