@@ -15,10 +15,12 @@ import {
   IconButton,
   useColorModeValue,
   Skeleton,
+  useColorMode,
 } from "@chakra-ui/react";
 import { useAuth } from "@/utils/useAuth";
 import NextLink from "next/link";
 import { useLanguage } from "@/utils/useLanguage";
+import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 
 const translations = {
   en: {
@@ -42,6 +44,7 @@ const translations = {
 export function Header() {
   const { user, login, logout, loading } = useAuth();
   const { language, changeLanguage } = useLanguage();
+  const { colorMode, toggleColorMode } = useColorMode();
   const t = translations[language];
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
@@ -86,6 +89,13 @@ export function Header() {
         </Flex>
 
         <HStack spacing={4}>
+          <IconButton
+            size="sm"
+            aria-label="Toggle color mode"
+            icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+            onClick={toggleColorMode}
+            variant="ghost"
+          />
           <Button
             size="sm"
             variant="ghost"
