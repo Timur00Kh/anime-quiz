@@ -20,6 +20,17 @@ interface OstQuizQuestion {
   correctAnswer: number;
 }
 
+interface OstQuizResults {
+  score: number;
+  totalQuestions: number;
+  questions: OstQuizQuestion[];
+  guessTimes: Array<{
+    questionIndex: number;
+    timeLeft: number | null;
+    isCorrect: boolean;
+  }>;
+}
+
 const translations = {
   en: {
     title: "Anime OST Quiz",
@@ -51,7 +62,7 @@ const translations = {
     incorrect: "Неправильно",
     correctAnswer: "Правильный ответ:",
     complete: "Викторина завершена!",
-    score: "Ваш результат:",
+    score: "Ваш результат",
     tryAgain: "Попробовать снова",
     playOst: "Включить OST",
     pauseOst: "Остановить OST",
@@ -98,6 +109,16 @@ export default function OstQuizPage() {
     handleLoadQuiz();
   };
 
+  const handleComplete = (results: OstQuizResults) => {
+    // Here you can handle the quiz results
+    // For example, you could:
+    // - Save them to a database
+    // - Show additional statistics
+    // - Update user profile
+    // - etc.
+    console.log('Quiz completed with results:', results);
+  };
+
   return (
     <Container maxW="container.md" py={8}>
       <OstQuiz 
@@ -108,6 +129,7 @@ export default function OstQuizPage() {
         loadingProgress={loadingProgress}
         onStart={handleLoadQuiz}
         onRestart={handleRestart}
+        onComplete={handleComplete}
       />
     </Container>
   );

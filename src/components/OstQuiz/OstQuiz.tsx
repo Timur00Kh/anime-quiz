@@ -30,6 +30,17 @@ interface OstQuizState {
   }>;
 }
 
+interface OstQuizResults {
+  score: number;
+  totalQuestions: number;
+  questions: OstQuizQuestion[];
+  guessTimes: Array<{
+    questionIndex: number;
+    timeLeft: number | null;
+    isCorrect: boolean;
+  }>;
+}
+
 interface OstQuizProps {
   translations: {
     title: string;
@@ -56,6 +67,7 @@ interface OstQuizProps {
   loadingProgress: number;
   onStart: () => void;
   onRestart: () => void;
+  onComplete?: (results: OstQuizResults) => void;
 }
 
 export default function OstQuiz({ 
@@ -65,7 +77,8 @@ export default function OstQuiz({
   isLoading, 
   loadingProgress,
   onStart,
-  onRestart 
+  onRestart,
+  onComplete
 }: OstQuizProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
@@ -215,6 +228,13 @@ export default function OstQuiz({
         }));
         setTimeLeft(20);
       } else {
+        const results: OstQuizResults = {
+          score: quizState.score,
+          totalQuestions: questions.length,
+          questions,
+          guessTimes: [...quizState.guessTimes]
+        };
+        onComplete?.(results);
         setQuizState(prev => ({
           ...prev,
           isFinished: true,
