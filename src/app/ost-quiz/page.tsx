@@ -2,7 +2,7 @@
 
 import { Container } from "@chakra-ui/react";
 import { useLanguage } from "@/utils/useLanguage";
-import OstQuiz from "@/components/OstQuiz";
+import { OstQuiz } from "@/components/OstQuiz";
 
 const translations = {
   en: {
