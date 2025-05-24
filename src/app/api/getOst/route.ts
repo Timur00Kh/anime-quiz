@@ -2,6 +2,7 @@ import * as cheerio from "cheerio";
 import { NextRequest, NextResponse } from "next/server";
 import * as os from "os";
 import { ChildNode } from "domhandler/lib/node";
+import { Author, OST, OstType } from "./types";
 
 // Simple memoization utility
 const memoize = <T extends (...args: any[]) => any>(fn: T): T => {
@@ -20,33 +21,6 @@ const memoize = <T extends (...args: any[]) => any>(fn: T): T => {
 
 // Development mode check
 const isDev = process.env.NODE_ENV === 'development';
-
-export enum OstType {
-  OP = "OP",
-  ED = "ED",
-  TRAILER = "TRAILER",
-  UNRECOGNIZED = "UNRECOGNIZED",
-}
-
-export interface Author {
-  id: number;
-  name: string;
-  href: string;
-  role: string;
-}
-
-export interface OST {
-  id: number;
-  unparsed_type: string;
-  type: OstType;
-  href: string;
-  video: string;
-  title: string;
-  authors: Author[];
-  ost_order: number;
-  order?: number;
-  a?: any;
-}
 
 function getSiblings(sibling: ChildNode): ChildNode[] {
   const siblings: ChildNode[] = [sibling];
