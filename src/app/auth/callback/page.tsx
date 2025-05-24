@@ -7,7 +7,7 @@ import { DOMAIN } from "@/utils/shikiAPI";
 export default function AuthCallback() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const code = searchParams.get("code");
+  const code = searchParams?.get("code");
 
   useEffect(() => {
     if (!code) {

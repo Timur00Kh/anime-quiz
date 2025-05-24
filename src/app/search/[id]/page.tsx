@@ -8,7 +8,7 @@ import {
   IExternalLink,
 } from "@/utils/shikiAPI";
 import { useToastErr } from "@/utils/useToastErr";
-import { OST, OstType } from "@/app/api/getOst/route";
+import { OST, OstType } from "@/app/api/getOst/types";
 import { OSTCard } from "@/components/OSTCard";
 import { OSTSkeletonList } from "@/components/OSTSkeleton";
 import { AnimeCard, AnimeCardSkeleton } from "@/components/AnimeCard";

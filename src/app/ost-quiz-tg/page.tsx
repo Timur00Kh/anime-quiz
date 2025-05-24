@@ -6,7 +6,7 @@ import { OstQuiz } from "@/components/OstQuiz";
 import { generateOstQuiz } from "@/utils/ostAPI";
 import { useState, useEffect } from "react";
 import { useToast } from "@chakra-ui/react";
-import { OstType } from "@/app/api/getOst/route";
+import { OstType } from "@/app/api/getOst/types";
 
 declare global {
   interface Window {

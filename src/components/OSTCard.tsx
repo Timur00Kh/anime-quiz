@@ -10,7 +10,7 @@ import {
   Badge,
   Flex,
 } from "@chakra-ui/react";
-import { OST } from "@/app/api/getOst/route";
+import { OST } from "@/app/api/getOst/types";
 
 interface OSTCardProps {
   ost: OST;

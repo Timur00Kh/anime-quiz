@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { SHIKIMORI_URL } from "@/utils/shikiAPI";
-import { OstType } from "@/app/api/getOst/route";
+import { OstType } from "@/app/api/getOst/types";
 
 interface AnswerInfoProps {
   question: {

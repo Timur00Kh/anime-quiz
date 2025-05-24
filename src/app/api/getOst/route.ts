@@ -143,9 +143,9 @@ const getLinkListImpl = async (id: string): Promise<Partial<OST>[]> => {
   return arr;
 };
 
-// Export memoized versions in dev mode, regular versions in prod
-export const getLinkList = isDev ? memoize(getLinkListImpl) : getLinkListImpl;
-export const getFullOST = isDev ? memoize(getFullOSTImpl) : getFullOSTImpl;
+// memoized versions in dev mode, regular versions in prod
+const getLinkList = isDev ? memoize(getLinkListImpl) : getLinkListImpl;
+const getFullOST = isDev ? memoize(getFullOSTImpl) : getFullOSTImpl;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

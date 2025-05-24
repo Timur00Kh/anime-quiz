@@ -1,12 +1,12 @@
 "use client";
-
+import { OstType } from "@/app/api/getOst/types";
 import { Container } from "@chakra-ui/react";
 import { useLanguage } from "@/utils/useLanguage";
 import { OstQuiz } from "@/components/OstQuiz";
 import { generateOstQuiz } from "@/utils/ostAPI";
 import { useState } from "react";
 import { useToast } from "@chakra-ui/react";
-import { OstType } from "@/app/api/getOst/route";
+
 
 interface OstQuizQuestion {
   id: string;
@@ -52,6 +52,7 @@ const translations = {
     other: "Other",
     timeBonus: "Time bonus: +",
     maxScore: "Maximum possible:",
+    shareScore: "Share Score"
   },
   ru: {
     title: "Аниме OST Викторина",
@@ -73,6 +74,7 @@ const translations = {
     other: "Другое",
     timeBonus: "Бонус времени: +",
     maxScore: "Максимально возможно:",
+    shareScore: "Поделиться результатом"
   },
 };
 

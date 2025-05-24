@@ -13,7 +13,7 @@ import {
   CircularProgressLabel,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { OstType } from "@/app/api/getOst/route";
+import { OstType } from "@/app/api/getOst/types";
 import { RefObject } from "react";
 import { AnswerInfo } from "./AnswerInfo";
 

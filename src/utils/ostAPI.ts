@@ -1,5 +1,5 @@
 import { getAnime, getAnimeExternals, IExternalLink, getAnimes, ShikiAPIAnimeSearch } from "./shikiAPI";
-import { OST, OstType } from "@/app/api/getOst/route";
+import { OST, OstType } from "@/app/api/getOst/types";
 
 interface OstSource {
   id: number;

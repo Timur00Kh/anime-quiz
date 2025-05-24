@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Heading, VStack, useToast } from "@chakra-ui/react";
-import { OstType } from "@/app/api/getOst/route";
+import { OstType } from "@/app/api/getOst/types";
 import { Question } from "./Question";
 import { StartScreen } from "./StartScreen";
 import { Results } from "./Results";
