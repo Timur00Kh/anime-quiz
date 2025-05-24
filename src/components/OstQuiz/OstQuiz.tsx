@@ -25,6 +25,11 @@ interface OstQuizState {
   score: number;
   totalQuestions: number;
   isFinished: boolean;
+  guessTimes: Array<{
+    questionIndex: number;
+    timeLeft: number | null;
+    isCorrect: boolean;
+  }>;
 }
 
 interface OstQuizProps {
@@ -66,6 +71,7 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
     score: 0,
     totalQuestions: 10,
     isFinished: false,
+    guessTimes: [],
   });
   const videoRef = useRef<HTMLVideoElement>(null);
   const toast = useToast();
@@ -182,6 +188,7 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
       score: 0,
       totalQuestions: 10,
       isFinished: false,
+      guessTimes: [],
     });
   };
 
@@ -206,12 +213,15 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
     setShowingAnswer(true);
     setTimeLeft(null);
 
-    if (isCorrect) {
-      setQuizState(prev => ({
-        ...prev,
-        score: prev.score + 1,
-      }));
-    }
+    setQuizState(prev => ({
+      ...prev,
+      score: isCorrect ? prev.score + (timeLeft || 0) : prev.score,
+      guessTimes: [...prev.guessTimes, {
+        questionIndex: prev.currentQuestionIndex,
+        timeLeft: timeLeft,
+        isCorrect
+      }]
+    }));
 
     answerTimeout.current = setTimeout(() => {
       if (videoRef.current) {
@@ -277,7 +287,10 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
         <Results
           score={quizState.score}
           totalQuestions={quizState.questions.length}
+          questions={quizState.questions}
+          guessTimes={quizState.guessTimes}
           translations={t}
+          language={language}
           onRestart={handleRestart}
         />
       ) : (

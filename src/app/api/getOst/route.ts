@@ -3,6 +3,24 @@ import { NextRequest, NextResponse } from "next/server";
 import * as os from "os";
 import { ChildNode } from "domhandler/lib/node";
 
+// Simple memoization utility
+const memoize = <T extends (...args: any[]) => any>(fn: T): T => {
+  const cache = new Map();
+  
+  return ((...args: Parameters<T>): ReturnType<T> => {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  }) as T;
+};
+
+// Development mode check
+const isDev = process.env.NODE_ENV === 'development';
+
 export enum OstType {
   OP = "OP",
   ED = "ED",
@@ -30,25 +48,17 @@ export interface OST {
   a?: any;
 }
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("waId");
-  if (!id) {
-    return NextResponse.json({ error: "Кажется нет waId" }, { status: 400 });
-  }
-
-  const osts = await getLinkList(id);
-  const fullOSTs = [];
-
-  for (const ost of osts) {
-    const fullOst = await getFullOST(ost);
-    fullOSTs.push(fullOst);
-  }
-
-  return NextResponse.json(fullOSTs);
+function getSiblings(sibling: ChildNode): ChildNode[] {
+  const siblings: ChildNode[] = [sibling];
+  let current: ChildNode | null | undefined = sibling;
+  do {
+    siblings.push(current);
+    current = current?.nextSibling;
+  } while (current);
+  return siblings.filter(Boolean);
 }
 
-async function getFullOST(ost: Partial<OST>): Promise<OST> {
+const getFullOSTImpl = async (ost: Partial<OST>): Promise<OST> => {
   const html = await fetch(`http://www.world-art.ru/animation/${ost.href}`, {
     cache: "force-cache",
   })
@@ -109,19 +119,9 @@ async function getFullOST(ost: Partial<OST>): Promise<OST> {
     unparsed_type: ost.unparsed_type || '',
     video: video,
   };
-}
+};
 
-function getSiblings(sibling: ChildNode): ChildNode[] {
-  const siblings: ChildNode[] = [sibling];
-  let current: ChildNode | null | undefined = sibling;
-  do {
-    siblings.push(current);
-    current = current?.nextSibling;
-  } while (current);
-  return siblings.filter(Boolean);
-}
-
-async function getLinkList(id: string): Promise<Partial<OST>[]> {
+const getLinkListImpl = async (id: string): Promise<Partial<OST>[]> => {
   const html = await fetch(
     `http://www.world-art.ru/animation/animation_trailers.php?id=${id}`
   )
@@ -167,4 +167,26 @@ async function getLinkList(id: string): Promise<Partial<OST>[]> {
   });
 
   return arr;
+};
+
+// Export memoized versions in dev mode, regular versions in prod
+export const getLinkList = isDev ? memoize(getLinkListImpl) : getLinkListImpl;
+export const getFullOST = isDev ? memoize(getFullOSTImpl) : getFullOSTImpl;
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("waId");
+  if (!id) {
+    return NextResponse.json({ error: "Кажется нет waId" }, { status: 400 });
+  }
+
+  const osts = await getLinkList(id);
+  const fullOSTs = [];
+
+  for (const ost of osts) {
+    const fullOst = await getFullOST(ost);
+    fullOSTs.push(fullOst);
+  }
+
+  return NextResponse.json(fullOSTs);
 }

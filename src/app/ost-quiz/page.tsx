@@ -23,6 +23,8 @@ const translations = {
     ending: "Ending",
     trailer: "Trailer",
     other: "Other",
+    timeBonus: "Time bonus: +",
+    maxScore: "Maximum possible:",
   },
   ru: {
     title: "Аниме OST Викторина",
@@ -42,6 +44,8 @@ const translations = {
     ending: "Концовка",
     trailer: "Трейлер",
     other: "Другое",
+    timeBonus: "Бонус времени: +",
+    maxScore: "Максимально возможно:",
   },
 };
 
