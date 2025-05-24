@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { Heading, VStack, useToast } from "@chakra-ui/react";
-import { generateOstQuiz } from "@/utils/ostAPI";
 import { OstType } from "@/app/api/getOst/route";
 import { Question } from "./Question";
 import { StartScreen } from "./StartScreen";
@@ -20,7 +19,6 @@ interface OstQuizQuestion {
 }
 
 interface OstQuizState {
-  questions: OstQuizQuestion[];
   currentQuestionIndex: number;
   score: number;
   totalQuestions: number;
@@ -53,11 +51,22 @@ interface OstQuizProps {
     other: string;
   };
   language: string;
+  questions: OstQuizQuestion[];
+  isLoading: boolean;
+  loadingProgress: number;
+  onStart: () => void;
+  onRestart: () => void;
 }
 
-export default function OstQuiz({ translations: t, language }: OstQuizProps) {
-  const [loading, setLoading] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState(0);
+export default function OstQuiz({ 
+  translations: t, 
+  language, 
+  questions, 
+  isLoading, 
+  loadingProgress,
+  onStart,
+  onRestart 
+}: OstQuizProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -66,7 +75,6 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
   const answerTimeout = useRef<NodeJS.Timeout>();
   const timerInterval = useRef<NodeJS.Timeout>();
   const [quizState, setQuizState] = useState<OstQuizState>({
-    questions: [],
     currentQuestionIndex: 0,
     score: 0,
     totalQuestions: 10,
@@ -74,7 +82,6 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
     guessTimes: [],
   });
   const videoRef = useRef<HTMLVideoElement>(null);
-  const toast = useToast();
 
   useEffect(() => {
     return () => {
@@ -91,7 +98,7 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
   }, []);
 
   useEffect(() => {
-    if (videoRef.current && !quizState.isFinished && isStarted && quizState.questions.length > 0) {
+    if (videoRef.current && !quizState.isFinished && isStarted && questions.length > 0) {
       const playTimer = setTimeout(() => {
         videoRef.current?.play().catch(error => {
           console.error('Autoplay failed:', error);
@@ -102,16 +109,16 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
 
       return () => clearTimeout(playTimer);
     }
-  }, [quizState.currentQuestionIndex, isStarted, quizState.questions]);
+  }, [quizState.currentQuestionIndex, isStarted, questions]);
 
   useEffect(() => {
-    if (quizState.questions.length > 0 && !loading) {
+    if (questions.length > 0 && !isLoading) {
       setTimeLeft(20);
     }
-  }, [quizState.questions.length, loading]);
+  }, [questions.length, isLoading]);
 
   useEffect(() => {
-    if (!showingAnswer && isStarted && !quizState.isFinished && quizState.questions.length > 0 && timeLeft !== null) {
+    if (!showingAnswer && isStarted && !quizState.isFinished && questions.length > 0 && timeLeft !== null) {
       if (timerInterval.current) {
         clearInterval(timerInterval.current);
       }
@@ -137,43 +144,14 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
         }
       };
     }
-  }, [quizState.currentQuestionIndex, isStarted, showingAnswer, quizState.isFinished, timeLeft, quizState.questions.length]);
-
-  const loadQuiz = async () => {
-    try {
-      setLoading(true);
-      setLoadingProgress(0);
-      setTimeLeft(null);
-      const questions = await generateOstQuiz(10, (progress) => {
-        setLoadingProgress(progress);
-      });
-      setQuizState(prev => ({
-        ...prev,
-        questions,
-        currentQuestionIndex: 0,
-        score: 0,
-        isFinished: false,
-      }));
-      setIsPlaying(true);
-    } catch (error) {
-      toast({
-        title: t.loading,
-        description: "Failed to load quiz questions. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [quizState.currentQuestionIndex, isStarted, showingAnswer, quizState.isFinished, timeLeft, questions.length]);
 
   const handleStart = () => {
     setIsStarted(true);
-    loadQuiz();
+    onStart();
   };
 
-  const handleRestart = () => {
+  const handleRestartClick = () => {
     if (timerInterval.current) {
       clearInterval(timerInterval.current);
     }
@@ -183,13 +161,13 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
     setIsStarted(false);
     setTimeLeft(null);
     setQuizState({
-      questions: [],
       currentQuestionIndex: 0,
       score: 0,
       totalQuestions: 10,
       isFinished: false,
       guessTimes: [],
     });
+    onRestart();
   };
 
   const handleAnswer = (selectedId: number) => {
@@ -199,7 +177,7 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
       clearInterval(timerInterval.current);
     }
     
-    const currentQuestion = quizState.questions[quizState.currentQuestionIndex];
+    const currentQuestion = questions[quizState.currentQuestionIndex];
     const selectedIndex = selectedId === -1 ? -1 : currentQuestion.options.findIndex(opt => opt.id === selectedId);
     const isCorrect = selectedIndex === currentQuestion.correctAnswer;
 
@@ -230,7 +208,7 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
       setShowingAnswer(false);
       setSelectedAnswer(null);
       
-      if (quizState.currentQuestionIndex < quizState.questions.length - 1) {
+      if (quizState.currentQuestionIndex < questions.length - 1) {
         setQuizState(prev => ({
           ...prev,
           currentQuestionIndex: prev.currentQuestionIndex + 1,
@@ -270,7 +248,7 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <LoadingScreen
         loadingProgress={loadingProgress}
@@ -286,19 +264,19 @@ export default function OstQuiz({ translations: t, language }: OstQuizProps) {
       {quizState.isFinished ? (
         <Results
           score={quizState.score}
-          totalQuestions={quizState.questions.length}
-          questions={quizState.questions}
+          totalQuestions={questions.length}
+          questions={questions}
           guessTimes={quizState.guessTimes}
           translations={t}
           language={language}
-          onRestart={handleRestart}
+          onRestart={handleRestartClick}
         />
       ) : (
-        quizState.questions.length > 0 && (
+        questions.length > 0 && (
           <Question
-            question={quizState.questions[quizState.currentQuestionIndex]}
+            question={questions[quizState.currentQuestionIndex]}
             currentQuestionIndex={quizState.currentQuestionIndex}
-            totalQuestions={quizState.questions.length}
+            totalQuestions={questions.length}
             score={quizState.score}
             showingAnswer={showingAnswer}
             selectedAnswer={selectedAnswer}
