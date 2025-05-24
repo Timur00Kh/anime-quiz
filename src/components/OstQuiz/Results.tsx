@@ -43,9 +43,11 @@ interface ResultsProps {
     ending: string;
     trailer: string;
     other: string;
+    shareScore: string;
   };
   language: string;
   onRestart: () => void;
+  onShare?: () => void;
 }
 
 export function Results({ 
@@ -55,7 +57,8 @@ export function Results({
   guessTimes,
   translations: t, 
   language,
-  onRestart 
+  onRestart,
+  onShare
 }: ResultsProps) {
   const getOstTypeText = (type: OstType) => {
     switch (type) {
@@ -95,9 +98,16 @@ export function Results({
                   borderRadius="full"
                 />
               </Box>
-              <Button colorScheme="blue" onClick={onRestart}>
-                {t.tryAgain}
-              </Button>
+              <VStack spacing={4}>
+                <Button colorScheme="blue" onClick={onRestart}>
+                  {t.tryAgain}
+                </Button>
+                {onShare && (
+                  <Button colorScheme="telegram" onClick={onShare}>
+                    {t.shareScore}
+                  </Button>
+                )}
+              </VStack>
             </VStack>
           </CardBody>
         </Card>

@@ -60,6 +60,9 @@ interface OstQuizProps {
     ending: string;
     trailer: string;
     other: string;
+    timeBonus: string;
+    maxScore: string;
+    shareScore: string;
   };
   language: string;
   questions: OstQuizQuestion[];
@@ -68,6 +71,7 @@ interface OstQuizProps {
   onStart: () => void;
   onRestart: () => void;
   onComplete?: (results: OstQuizResults) => void;
+  onShare?: () => void;
 }
 
 export default function OstQuiz({ 
@@ -78,7 +82,8 @@ export default function OstQuiz({
   loadingProgress,
   onStart,
   onRestart,
-  onComplete
+  onComplete,
+  onShare
 }: OstQuizProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
@@ -290,6 +295,7 @@ export default function OstQuiz({
           translations={t}
           language={language}
           onRestart={handleRestartClick}
+          onShare={onShare}
         />
       ) : (
         questions.length > 0 && (
