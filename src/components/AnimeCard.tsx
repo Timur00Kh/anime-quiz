@@ -60,6 +60,8 @@ export function AnimeCardSkeleton() {
 
 export function AnimeCard({ anime }: AnimeCardProps) {
   const isLoaded = !!anime;
+  const badgeBg = useColorModeValue("gray.50", "gray.800");
+  const badgeColor = useColorModeValue("gray.800", "gray.200");
 
   return (
     <Card w="100%">
@@ -90,8 +92,8 @@ export function AnimeCard({ anime }: AnimeCardProps) {
                 key={genre.id}
                 px={3}
                 py={1}
-                bg={useColorModeValue("gray.50", "gray.800")}
-                color={useColorModeValue("gray.800", "gray.200")}
+                bg={badgeBg}
+                color={badgeColor}
                 fontWeight="500"
                 borderRadius="full"
                 fontSize="sm"

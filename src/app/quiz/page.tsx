@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Box,
   Button,
@@ -71,11 +71,7 @@ export default function QuizPage() {
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
-  useEffect(() => {
-    loadQuiz();
-  }, []);
-
-  const loadQuiz = async () => {
+  const loadQuiz = useCallback(async () => {
     try {
       setLoading(true);
       const questions = await generateQuiz(10);
@@ -97,7 +93,11 @@ export default function QuizPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast, t.loading]);
+
+  useEffect(() => {
+    loadQuiz();
+  }, [loadQuiz]);
 
   const handleAnswer = (selectedId: number) => {
     const currentQuestion = quizState.questions[quizState.currentQuestionIndex];

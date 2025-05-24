@@ -1,7 +1,7 @@
 "use client";
 
 import { getAnimes, ShikiAPIAnimeSearch, AnimeSearchParams } from "@/utils/shikiAPI";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useDebounce } from "@uidotdev/usehooks";
 import {
   Box,
@@ -25,7 +25,7 @@ import { Card, CardBody, CardFooter } from "@chakra-ui/react";
 import { useToastErr } from "@/utils/useToastErr";
 import { CloseIcon, SearchIcon } from "@chakra-ui/icons";
 
-export default function () {
+export default function SearchPage() {
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -38,7 +38,7 @@ export default function () {
     setData([]);
   };
 
-  const loadAnimes = async (s: string) => {
+  const loadAnimes = useCallback(async (s: string) => {
     setIsLoading(true);
     setError(null);
     
@@ -56,16 +56,16 @@ export default function () {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toastErr]);
 
   useEffect(() => {
       loadAnimes(search);
-  }, [search]);
+  }, [search, loadAnimes]);
 
   // Initial load
   useEffect(() => {
     loadAnimes("");
-  }, []);
+  }, [loadAnimes]);
 
   return (
     <main style={{ display: "flex", width: "100%", justifyContent: "center" }}>

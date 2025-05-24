@@ -64,7 +64,7 @@ export default function Page({
         setIsLoadingOsts(false);
       }
     })();
-  }, [id]);
+  }, [id, toastErr]);
 
   return (
     <Box p={5}>
