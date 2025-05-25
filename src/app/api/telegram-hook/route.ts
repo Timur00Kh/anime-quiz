@@ -22,7 +22,7 @@ bot.on("callback_query", async (ctx) => {
   if (ctx.callbackQuery.game_short_name === GAME_SHORT_NAME) {
     // Telegram will handle the WebApp opening
     await ctx.answerGameQuery(
-      "https://anime-quiz-virid.vercel.app/ost-quiz-tg"
+      `https://anime-quiz-virid.vercel.app/ost-quiz-tg#chat_id=${ctx.callbackQuery.message?.chat.id}&message_id=${ctx.callbackQuery.message?.message_id}`
     );
   } else {
     await ctx.answerCbQuery("Unknown game.", { show_alert: true });
