@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!);
 
-const GAME_SHORT_NAME = process.env.TELEGRAM_BOT_GAME_SHORT_NAME;
+const GAME_SHORT_NAME = process.env.TELEGRAM_GAME_SHORT_NAME;
 
 async function handleOnMessage(ctx: TelegrafContext) {
   const { message } = ctx;
