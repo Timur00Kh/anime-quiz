@@ -144,7 +144,7 @@ export default function OstQuizTelegramPage() {
       },
       body: JSON.stringify({
         score: results.score,
-        userId: window.TelegramGameProxy?.initParams?.id,
+        userId: window.TelegramGameProxy?.initParams?.user_id,
         chatId: window.TelegramGameProxy?.initParams?.chat_id,
         messageId: window.TelegramGameProxy?.initParams?.message_id
       }),
