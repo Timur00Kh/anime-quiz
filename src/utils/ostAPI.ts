@@ -42,7 +42,7 @@ export async function getAnimeOst(animeId: number): Promise<OstSource[]> {
     return filteredOsts.map(ost => ({
       id: ost.id,
       title: ost.title,
-      url: `http://www.world-art.ru/${ost.video}`,
+      url: ost.videoUrl || `http://www.world-art.ru/${ost.video}`, // Prefer videoUrl, fallback to World-Art URL
       animeId,
       type: ost.type
     }));

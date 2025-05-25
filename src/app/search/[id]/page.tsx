@@ -13,6 +13,8 @@ import { OSTCard } from "@/components/OSTCard";
 import { OSTSkeletonList } from "@/components/OSTSkeleton";
 import { AnimeCard, AnimeCardSkeleton } from "@/components/AnimeCard";
 
+type FilterType = OstType | "ALL";
+
 export default function Page({
   params,
   searchParams,
@@ -24,7 +26,7 @@ export default function Page({
   const [anime, setAnime] = useState<IAnime | null>(null);
   const [animeExternals, setAnimeExternals] = useState<IExternalLink[]>([]);
   const [osts, setOsts] = useState<OST[]>([]);
-  const [selectedType, setSelectedType] = useState<string>("ALL");
+  const [selectedType, setSelectedType] = useState<FilterType>("ALL");
   const [isLoadingOsts, setIsLoadingOsts] = useState(false);
   const toastErr = useToastErr();
 

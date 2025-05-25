@@ -62,7 +62,7 @@ export function OSTCard({ ost }: OSTCardProps) {
             <video 
               controls 
               preload="metadata"
-              src={"http://www.world-art.ru/" + ost.video}
+              src={ost.videoUrl || (ost.video ? `http://www.world-art.ru/${ost.video}` : '')}
               style={{ width: '100%', borderRadius: '8px' }}
               onLoadedMetadata={(e) => {
                 // Set to approximately 10 frames in (assuming 30fps)
