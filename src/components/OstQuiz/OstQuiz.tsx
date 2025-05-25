@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Heading, VStack, useToast } from "@chakra-ui/react";
 import { OstType } from "@/app/api/getOst/types";
 import { Question } from "./Question";
@@ -101,94 +101,7 @@ export default function OstQuiz({
   });
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    return () => {
-      if (answerTimeout.current) {
-        clearTimeout(answerTimeout.current);
-      }
-      if (timerInterval.current) {
-        clearInterval(timerInterval.current);
-      }
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (videoRef.current && !quizState.isFinished && isStarted && questions.length > 0) {
-      const playTimer = setTimeout(() => {
-        videoRef.current?.play().catch(error => {
-          console.error('Autoplay failed:', error);
-          setIsPlaying(false);
-        });
-        setIsPlaying(true);
-      }, 100);
-
-      return () => clearTimeout(playTimer);
-    }
-  }, [quizState.currentQuestionIndex, isStarted, questions]);
-
-  useEffect(() => {
-    if (questions.length > 0 && !isLoading) {
-      setTimeLeft(20);
-    }
-  }, [questions.length, isLoading]);
-
-  useEffect(() => {
-    if (!showingAnswer && isStarted && !quizState.isFinished && questions.length > 0 && timeLeft !== null) {
-      if (timerInterval.current) {
-        clearInterval(timerInterval.current);
-      }
-
-      timerInterval.current = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev === null || prev <= 1) {
-            if (timerInterval.current) {
-              clearInterval(timerInterval.current);
-            }
-            if (prev !== null && prev <= 1) {
-              handleAnswer(-1);
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => {
-        if (timerInterval.current) {
-          clearInterval(timerInterval.current);
-        }
-      };
-    }
-  }, [quizState.currentQuestionIndex, isStarted, showingAnswer, quizState.isFinished, timeLeft, questions.length]);
-
-  const handleStart = () => {
-    setIsStarted(true);
-    onStart();
-  };
-
-  const handleRestartClick = () => {
-    if (timerInterval.current) {
-      clearInterval(timerInterval.current);
-    }
-    if (answerTimeout.current) {
-      clearTimeout(answerTimeout.current);
-    }
-    setIsStarted(false);
-    setTimeLeft(null);
-    setQuizState({
-      currentQuestionIndex: 0,
-      score: 0,
-      totalQuestions: 10,
-      isFinished: false,
-      guessTimes: [],
-    });
-    onRestart();
-  };
-
-  const handleAnswer = (selectedId: number) => {
+  const handleAnswer = useCallback((selectedId: number) => {
     if (showingAnswer) return;
     
     if (timerInterval.current) {
@@ -246,6 +159,95 @@ export default function OstQuiz({
         }));
       }
     }, 8000);
+  }, [showingAnswer, questions, quizState.currentQuestionIndex, timeLeft, onComplete]);
+
+  useEffect(() => {
+    const currentVideo = videoRef.current;
+    return () => {
+      if (answerTimeout.current) {
+        clearTimeout(answerTimeout.current);
+      }
+      if (timerInterval.current) {
+        clearInterval(timerInterval.current);
+      }
+      if (currentVideo) {
+        currentVideo.pause();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (videoRef.current && !quizState.isFinished && isStarted && questions.length > 0) {
+      const currentVideo = videoRef.current;
+      const playTimer = setTimeout(() => {
+        currentVideo?.play().catch(error => {
+          console.error('Autoplay failed:', error);
+          setIsPlaying(false);
+        });
+        setIsPlaying(true);
+      }, 100);
+
+      return () => clearTimeout(playTimer);
+    }
+  }, [quizState.currentQuestionIndex, isStarted, questions, quizState.isFinished]);
+
+  useEffect(() => {
+    if (questions.length > 0 && !isLoading) {
+      setTimeLeft(20);
+    }
+  }, [questions.length, isLoading]);
+
+  useEffect(() => {
+    if (!showingAnswer && isStarted && !quizState.isFinished && questions.length > 0 && timeLeft !== null) {
+      if (timerInterval.current) {
+        clearInterval(timerInterval.current);
+      }
+
+      timerInterval.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev === null || prev <= 1) {
+            if (timerInterval.current) {
+              clearInterval(timerInterval.current);
+            }
+            if (prev !== null && prev <= 1) {
+              handleAnswer(-1);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => {
+        if (timerInterval.current) {
+          clearInterval(timerInterval.current);
+        }
+      };
+    }
+  }, [quizState.currentQuestionIndex, isStarted, showingAnswer, quizState.isFinished, timeLeft, questions.length, handleAnswer]);
+
+  const handleStart = () => {
+    setIsStarted(true);
+    onStart();
+  };
+
+  const handleRestartClick = () => {
+    if (timerInterval.current) {
+      clearInterval(timerInterval.current);
+    }
+    if (answerTimeout.current) {
+      clearTimeout(answerTimeout.current);
+    }
+    setIsStarted(false);
+    setTimeLeft(null);
+    setQuizState({
+      currentQuestionIndex: 0,
+      score: 0,
+      totalQuestions: 10,
+      isFinished: false,
+      guessTimes: [],
+    });
+    onRestart();
   };
 
   const getOstTypeText = (type: OstType) => {

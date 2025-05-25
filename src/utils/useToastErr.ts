@@ -14,6 +14,6 @@ export function useToastErr<T>() {
         isClosable: true,
         position: "bottom-right",
       }),
-    []
+    [toast]
   );
 }
