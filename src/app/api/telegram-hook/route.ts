@@ -10,18 +10,7 @@ async function handleOnMessage(ctx: TelegrafContext) {
   const { message } = ctx;
   if (!message) return;
 
-  await ctx.reply("🎮 Ready to play Anime OST Quiz?", {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: "Play Now!",
-            callback_game: {},
-          },
-        ],
-      ],
-    },
-  });
+  await ctx.telegram.sendGame(message.chat.id, GAME_SHORT_NAME!);
 }
 
 bot.on("message", async (ctx) => {
