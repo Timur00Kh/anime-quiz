@@ -2,7 +2,7 @@
 import { Telegraf, type Context as TelegrafContext } from "telegraf";
 import { NextRequest, NextResponse } from "next/server";
 
-const bot = new Telegraf(process.env.BOT_TOKEN!);
+const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!);
 
 const GAME_SHORT_NAME = process.env.TELEGRAM_BOT_GAME_SHORT_NAME;
 
