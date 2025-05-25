@@ -20,9 +20,17 @@ bot.on("message", async (ctx) => {
 bot.on("callback_query", async (ctx) => {
   // @ts-ignore
   if (ctx.callbackQuery.game_short_name === GAME_SHORT_NAME) {
+    const params = [
+      ['chat_id', ctx.callbackQuery.message?.chat.id],
+      ['message_id', ctx.callbackQuery.message?.message_id],
+      ['user_id', ctx.callbackQuery.from.id]
+    ].filter(([_, value]) => value !== undefined);
+    
+    const paramsString = params.map(([key, value]) => `${key}=${value}`).join('&');
+
     // Telegram will handle the WebApp opening
     await ctx.answerGameQuery(
-      `https://anime-quiz-virid.vercel.app/ost-quiz-tg#chat_id=${ctx.callbackQuery.message?.chat.id}&message_id=${ctx.callbackQuery.message?.message_id}&user_id=${ctx.callbackQuery.from.id}` // Adjust the URL as needed
+      `https://anime-quiz-virid.vercel.app/ost-quiz-tg#${paramsString}`
     );
   } else {
     await ctx.answerCbQuery("Unknown game.", { show_alert: true });
