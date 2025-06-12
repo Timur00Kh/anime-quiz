@@ -100,14 +100,14 @@ const memoize = <T extends (...args: any[]) => any>(fn: T): T => {
 // Development mode check
 const isDev = process.env.NODE_ENV === 'development';
 
-function getSiblings(sibling: ChildNode): ChildNode[] {
-  const siblings: ChildNode[] = [sibling];
-  let current: ChildNode | null | undefined = sibling;
-  do {
+function getSiblings(start: ChildNode): ChildNode[] {
+  const siblings: ChildNode[] = [];
+  let current: ChildNode | null | undefined = start;
+  while (current) {
     siblings.push(current);
-    current = current?.nextSibling;
-  } while (current);
-  return siblings.filter(Boolean);
+    current = current.nextSibling;
+  }
+  return siblings;
 }
 
 const getFullOSTImpl = async (ost: Partial<OST>): Promise<OST> => {
