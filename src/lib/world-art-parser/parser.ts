@@ -1,13 +1,13 @@
 import * as cheerio from "cheerio";
 import { ChildNode } from "domhandler/lib/node";
-import { 
-  OST, 
-  OstType, 
-  Author, 
-  ParsedResult, 
-  ParserConfig, 
+import {
+  OST,
+  OstType,
+  Author,
+  ParsedResult,
+  ParserConfig,
   ParserError,
-  ParseProgress 
+  ParseProgress
 } from './types';
 import { getConfig } from './config';
 import { ParseCache } from './cache';
@@ -24,7 +24,7 @@ export class WorldArtParser {
    * Парсит OST для указанного World-Art ID
    */
   async parseAnime(
-    waId: number, 
+    waId: number,
     onProgress?: (progress: ParseProgress) => void
   ): Promise<ParsedResult> {
     if (!waId || waId <= 0) {
@@ -55,7 +55,7 @@ export class WorldArtParser {
       });
 
       const ostLinks = await this.getLinkList(waId);
-      
+
       onProgress?.({
         phase: 'parsing_ost',
         current: 1,
@@ -67,7 +67,7 @@ export class WorldArtParser {
       for (let i = 0; i < ostLinks.length; i++) {
         const fullOst = await this.getFullOST(ostLinks[i]);
         fullOSTs.push(fullOst);
-        
+
         onProgress?.({
           phase: 'parsing_ost',
           current: i + 1,
@@ -112,20 +112,20 @@ export class WorldArtParser {
 
     const $ = cheerio.load(html);
     const $links = $('font[size="2"] ~ table').find("a");
-    
+
     if ($links.length === 0) {
       throw this.createError('PARSE_ERROR', 'No OST links found', waId);
     }
 
     const ostLinks: Partial<OST>[] = [];
-    
+
     $links.each((i, el) => {
-      const href = el.attributes.find((a) => a.name === "href");
-      if (href?.value) {
-        ostLinks.push({ 
-          unparsed_type: $(el).text().trim(), 
-          href: href.value, 
-          ost_order: i 
+      const href = $(el).attr("href");
+      if (href) {
+        ostLinks.push({
+          unparsed_type: $(el).text().trim(),
+          href: href,
+          ost_order: i
         });
       }
     });
@@ -145,7 +145,7 @@ export class WorldArtParser {
     const html = await this.fetchPage(url);
 
     const $ = cheerio.load(html);
-    
+
     // Парсим заголовок
     const $title = $('td[width="20"] ~ td[valign="top"] font[size="3"]');
     const title = $title
@@ -158,7 +158,7 @@ export class WorldArtParser {
     const video = ($videoSource.attr("src") || "").replace(/^\.\./, "");
 
     // Парсим авторов
-    const authors = this.parseAuthors($);
+    const authors = this.parseAuthors($ as cheerio.CheerioAPI);
 
     return {
       id: ost.id || 0,
@@ -210,10 +210,10 @@ export class WorldArtParser {
     try {
       const $authorSection = $('td[width="20"] ~ td[valign="top"] p.review');
       const authors: Author[] = [];
-      
+
       if ($authorSection.length === 0) return authors;
 
-      const siblings = this.getSiblings($authorSection[0].childNodes[0]);
+      const siblings = this.getSiblings(($authorSection[0] as any).childNodes[0]);
       let currentRole = "";
 
       for (const node of siblings) {
@@ -223,7 +223,7 @@ export class WorldArtParser {
             currentRole = text.replace(":", "").trim();
           }
         }
-        
+
         if (node.type === "tag" && node.tagName === "a") {
           const href = node.attributes.find((e) => e.name === "href");
           const match = href?.value.match(/id=(\d+)/);
@@ -251,12 +251,12 @@ export class WorldArtParser {
   private getSiblings(sibling: ChildNode): ChildNode[] {
     const siblings: ChildNode[] = [];
     let current: ChildNode | null | undefined = sibling;
-    
+
     while (current) {
       siblings.push(current);
       current = current.nextSibling;
     }
-    
+
     return siblings.filter(Boolean);
   }
 
@@ -280,9 +280,9 @@ export class WorldArtParser {
 
       if (!response.ok) {
         throw this.createError(
-          'NETWORK_ERROR', 
-          `HTTP ${response.status}: ${response.statusText}`, 
-          undefined, 
+          'NETWORK_ERROR',
+          `HTTP ${response.status}: ${response.statusText}`,
+          undefined,
           url
         );
       }
@@ -290,7 +290,7 @@ export class WorldArtParser {
       const buffer = await response.arrayBuffer();
       return new TextDecoder(this.config.encoding).decode(buffer);
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw this.createError('TIMEOUT_ERROR', 'Request timeout', undefined, url);
       }
       throw error;
@@ -301,9 +301,9 @@ export class WorldArtParser {
    * Создает типизированную ошибку
    */
   private createError(
-    code: ParserError['code'], 
-    message: string, 
-    waId?: number, 
+    code: ParserError['code'],
+    message: string,
+    waId?: number,
     url?: string
   ): ParserError {
     const error = new Error(message) as ParserError;
@@ -322,8 +322,8 @@ export class WorldArtParser {
     }
 
     try {
-      const videoUrl = ost.video.startsWith('http') 
-        ? ost.video 
+      const videoUrl = ost.video.startsWith('http')
+        ? ost.video
         : `${this.config.domain}${ost.video}`;
 
       return {
@@ -346,7 +346,7 @@ export class WorldArtParser {
       return false;
     }
 
-    return result.osts.every(ost => 
+    return result.osts.every(ost =>
       typeof ost.id === 'number' &&
       typeof ost.title === 'string' &&
       typeof ost.href === 'string' &&
@@ -358,14 +358,14 @@ export class WorldArtParser {
 // Статические утилиты для удобства
 export const WorldArtUtils = {
   createParser: (config?: Partial<ParserConfig>) => new WorldArtParser(config),
-  
+
   parseAnime: async (waId: number, config?: Partial<ParserConfig>) => {
     const parser = new WorldArtParser(config);
     return parser.parseAnime(waId);
   },
-  
+
   clearCache: () => ParseCache.clear(),
-  
+
   getCacheStats: () => ({
     size: ParseCache.size(),
     keys: ParseCache.keys(),

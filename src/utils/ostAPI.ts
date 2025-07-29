@@ -28,18 +28,38 @@ async function getWorldArtId(animeId: number): Promise<number | null> {
   }
 }
 
-// Функция для работы с API (временно, до полной миграции на Convex)
+// Функция для работы с Convex (основная)
 export async function getAnimeOst(animeId: number): Promise<OstSource[]> {
   try {
     const waId = await getWorldArtId(animeId);
     if (!waId) return [];
 
-    // Временно используем старый API endpoint
-    const response = await fetch(`/api/getOst?waId=${waId}`);
-    const osts = await response.json();
+    // Используем Convex action
+    const api = await getConvexApi();
+    if (!api) {
+      // Fallback к старому API если Convex недоступен
+      const response = await fetch(`/api/getOst?waId=${waId}`);
+      const osts = await response.json();
 
-    // Filter only OP and ED
-    const filteredOsts = osts.filter((ost: any) => ost.type === OstType.OP || ost.type === OstType.ED);
+      const filteredOsts = osts.filter((ost: any) => ost.type === OstType.OP || ost.type === OstType.ED);
+
+      return filteredOsts.map((ost: any) => ({
+        id: ost.id,
+        title: ost.title,
+        url: ost.videoUrl || `http://www.world-art.ru${ost.video}`,
+        animeId,
+        type: ost.type
+      }));
+    }
+
+    // Используем Convex action
+    const { convex } = await import("./convex");
+    const osts = await convex.action(api.worldArt.parseWorldArt, { waId });
+
+    // Фильтруем только OP и ED
+    const filteredOsts = osts.filter((ost: any) =>
+      ost.type === OstType.OP || ost.type === OstType.ED
+    );
 
     return filteredOsts.map((ost: any) => ({
       id: ost.id,

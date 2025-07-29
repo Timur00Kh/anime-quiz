@@ -17,7 +17,7 @@ export class ParseCache {
 
   static get<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return null;
     }
@@ -54,8 +54,10 @@ export class ParseCache {
     const now = Date.now();
     let cleaned = 0;
 
-    for (const [key, entry] of this.cache.entries()) {
-      if (now - entry.timestamp > entry.ttl) {
+    const keys = Array.from(this.cache.keys());
+    for (const key of keys) {
+      const entry = this.cache.get(key);
+      if (entry && now - entry.timestamp > entry.ttl) {
         this.cache.delete(key);
         cleaned++;
       }
@@ -66,18 +68,18 @@ export class ParseCache {
 
   // Мемоизация функций
   static memoize<T extends (...args: any[]) => any>(
-    fn: T, 
+    fn: T,
     keyGenerator?: (...args: Parameters<T>) => string,
     ttl?: number
   ): T {
     return ((...args: Parameters<T>): ReturnType<T> => {
       const key = keyGenerator ? keyGenerator(...args) : JSON.stringify(args);
       const cached = this.get<ReturnType<T>>(key);
-      
+
       if (cached !== null) {
         return cached;
       }
-      
+
       const result = fn(...args);
       this.set(key, result, ttl || 60000); // 1 минута по умолчанию
       return result;

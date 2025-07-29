@@ -17,8 +17,39 @@ export const parseWorldArt = action({
       }));
     }
 
-    // TODO: Интегрировать парсер после решения проблем с зависимостями
-    throw new Error("Parser integration not yet complete. Use API endpoint for now.");
+    try {
+      // Динамически импортируем парсер
+      const { WorldArtParser } = await import("../src/lib/world-art-parser/parser");
+
+      // Создаем экземпляр парсера
+      const parser = new WorldArtParser({
+        enableCache: true,
+        requestTimeout: 10000,
+      });
+
+      // Парсим аниме
+      const result = await parser.parseAnime(waId);
+
+      // Сохраняем результаты в БД
+      await ctx.runMutation(api.worldArt.saveParseResults, {
+        waId,
+        shikimoriId: undefined, // shikimoriId не доступен в ParsedResult TODO: надо обязательно исправить. Из квери параметра брать
+        osts: result.osts,
+        parserVersion: result.parserVersion,
+        parsedAt: result.parsedAt,
+        raw: result.rawData,
+      });
+
+      // Возвращаем результаты с правильными URL
+      return result.osts.map((ost: any) => ({
+        ...ost,
+        videoUrl: ost.video.startsWith('http') ? ost.video : `http://www.world-art.ru${ost.video}`
+      }));
+
+    } catch (error: any) {
+      console.error("Error parsing World-Art:", error);
+      throw new Error(`Failed to parse anime ${waId}: ${error.message}`);
+    }
   },
 });
 

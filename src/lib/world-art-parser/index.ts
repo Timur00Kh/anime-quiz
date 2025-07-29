@@ -5,7 +5,6 @@ export { getConfig, DEFAULT_CONFIG, DEVELOPMENT_CONFIG, PRODUCTION_CONFIG } from
 export type {
   OST,
   Author,
-  OstType,
   ParsedResult,
   ParserConfig,
   ParserError,
