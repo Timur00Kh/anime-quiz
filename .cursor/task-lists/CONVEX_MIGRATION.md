@@ -20,14 +20,19 @@
 - [x] Исправить TypeScript ошибки в парсере
 - [x] Протестировать парсер (работает с ID 10)
 - [x] Протестировать приложение (Next.js работает на порту 3001)
+- [x] Удалить HTTP endpoint `/ost` из Convex (не нужен)
+- [x] Заменить все fetch на Convex actions напрямую
+- [x] Создать общий файл типов для OST
+- [x] Обновить search/[id]/page.tsx для использования Convex actions
+- [x] Обновить все импорты типов OST
 
 ## In Progress Tasks
 
-- [ ] Заменить старые API endpoints на Convex functions
 - [ ] Протестировать генерацию квиза с Convex
 
 ## Future Tasks
 
+- [ ] Удалить старые API endpoints
 - [ ] Заменить Supabase на Convex в компонентах
 - [ ] Проверить производительность
 - [ ] Удалить Supabase зависимости
@@ -51,11 +56,14 @@
 - ✅ TypeScript ошибки исправлены
 - ✅ Парсер протестирован (работает с ID 10)
 - ✅ Приложение работает (http://localhost:3001)
-- 🔄 Нужно заменить старые API endpoints
+- ✅ HTTP endpoint `/ost` удален из Convex
+- ✅ Все fetch заменены на Convex actions
+- ✅ Все импорты типов обновлены
+- 🔄 Нужно протестировать квиз с новыми actions
 
 ### Следующие шаги
-1. Заменить `/api/getOst` на Convex functions
-2. Протестировать квиз с новыми endpoints
+1. Протестировать квиз с новыми Convex actions
+2. Удалить старые API endpoints
 3. Удалить Supabase зависимости
 
 ## Relevant Files
@@ -64,12 +72,17 @@
 - `convex/schema.ts` - ✅ Схема БД
 - `convex/worldArt.ts` - ✅ Functions для парсера (интегрирован)
 - `convex/telegram.ts` - ✅ Telegram handlers
-- `convex/http.ts` - ✅ HTTP endpoints
+- `convex/http.ts` - ✅ HTTP endpoints (только Telegram webhook)
 - `scripts/validate-migration.ts` - ✅ Валидация миграции
 - `scripts/simple-test.ts` - ✅ Быстрый тест парсера
 - `MIGRATION.md` - ✅ Документация
 - `src/utils/convex.ts` - ✅ Клиентская интеграция
 - `src/app/ClientLayout.tsx` - ✅ ConvexProvider добавлен
-- `src/utils/ostAPI.ts` - ✅ Обновлен для Convex
+- `src/utils/ostAPI.ts` - ✅ Обновлен для Convex actions
 - `src/lib/world-art-parser/parser.ts` - ✅ TypeScript ошибки исправлены
-- `src/app/api/getOst/route.ts` - 🔄 Нужно заменить на Convex 
+- `src/app/api/getOst/route.ts` - 🔄 Нужно удалить после тестирования
+- `src/app/api/getOst/types.ts` - ✅ Заменен на общий модуль
+- `src/app/search/[id]/page.tsx` - ✅ Обновлен для использования Convex actions
+- `src/components/OSTCard.tsx` - ✅ Импорты обновлены
+- `src/components/OstQuiz/` - ✅ Все импорты обновлены
+- `src/utils/supabase.ts` - ✅ Импорты обновлены 

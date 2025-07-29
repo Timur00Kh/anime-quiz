@@ -13,7 +13,7 @@ import {
   CircularProgressLabel,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { OstType } from "@/app/api/getOst/types";
+import { OstType } from "@/lib/world-art-parser/types";
 import { RefObject } from "react";
 import { AnswerInfo } from "./AnswerInfo";
 
@@ -73,10 +73,10 @@ export function Question({
 
   const getButtonStyle = (index: number) => {
     if (!showingAnswer) return {};
-    
+
     const isCorrect = index === question.correctAnswer;
     const isSelected = index === selectedAnswer;
-    
+
     if (isCorrect) {
       return {
         bg: 'green.500',
@@ -135,9 +135,9 @@ export function Question({
               <video
                 ref={videoRef}
                 src={question.ostUrl}
-                style={{ 
-                  width: '100%', 
-                  borderRadius: '8px', 
+                style={{
+                  width: '100%',
+                  borderRadius: '8px',
                   display: 'none',
                   maxHeight: '300px',
                   objectFit: 'contain',
@@ -160,8 +160,8 @@ export function Question({
                   </CircularProgress>
                 ) : (
                   <Text fontSize="sm" color="gray.600">
-                    {language === "en" 
-                      ? "Next question in 8 seconds..." 
+                    {language === "en"
+                      ? "Next question in 8 seconds..."
                       : "Следующий вопрос через 8 секунд..."}
                   </Text>
                 )}
@@ -208,6 +208,7 @@ export function Question({
                       height="auto"
                       whiteSpace="normal"
                       py={4}
+                      {...getButtonStyle(index)}
                     >
                       <Text
                         noOfLines={2}

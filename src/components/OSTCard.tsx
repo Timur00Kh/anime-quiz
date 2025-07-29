@@ -4,13 +4,13 @@ import {
   Box,
   Card,
   CardBody,
-  Stack,
   Heading,
   Text,
+  Stack,
   Badge,
   Flex,
 } from "@chakra-ui/react";
-import { OST } from "@/app/api/getOst/types";
+import { OST } from "@/lib/world-art-parser/types";
 
 interface OSTCardProps {
   ost: OST;
@@ -35,13 +35,13 @@ export function OSTCard({ ost }: OSTCardProps) {
               </Badge>
             </Flex>
           </Box>
-          
+
           {ost.authors?.length > 0 && (
             <Box>
               <Text fontWeight="medium" mb={2}>Authors:</Text>
               <Stack>
                 {ost.authors.map((author) => (
-                  <Flex 
+                  <Flex
                     key={author.id}
                     p={2}
                     bg="gray.50"
@@ -59,8 +59,8 @@ export function OSTCard({ ost }: OSTCardProps) {
 
           <Box>
             <Text fontWeight="medium" mb={2}>OST Preview:</Text>
-            <video 
-              controls 
+            <video
+              controls
               preload="metadata"
               src={ost.videoUrl || (ost.video ? `http://www.world-art.ru/${ost.video}` : '')}
               style={{ width: '100%', borderRadius: '8px' }}

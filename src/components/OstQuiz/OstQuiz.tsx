@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Heading, VStack, useToast } from "@chakra-ui/react";
-import { OstType } from "@/app/api/getOst/types";
+import { OstType } from "@/lib/world-art-parser/types";
 import { Question } from "./Question";
 import { StartScreen } from "./StartScreen";
 import { Results } from "./Results";
@@ -74,11 +74,11 @@ interface OstQuizProps {
   onShare?: () => void;
 }
 
-export default function OstQuiz({ 
-  translations: t, 
-  language, 
-  questions, 
-  isLoading, 
+export default function OstQuiz({
+  translations: t,
+  language,
+  questions,
+  isLoading,
   loadingProgress,
   onStart,
   onRestart,
@@ -103,11 +103,11 @@ export default function OstQuiz({
 
   const handleAnswer = useCallback((selectedId: number) => {
     if (showingAnswer) return;
-    
+
     if (timerInterval.current) {
       clearInterval(timerInterval.current);
     }
-    
+
     const currentQuestion = questions[quizState.currentQuestionIndex];
     const selectedIndex = selectedId === -1 ? -1 : currentQuestion.options.findIndex(opt => opt.id === selectedId);
     const isCorrect = selectedIndex === currentQuestion.correctAnswer;
@@ -138,7 +138,7 @@ export default function OstQuiz({
       }
       setShowingAnswer(false);
       setSelectedAnswer(null);
-      
+
       if (quizState.currentQuestionIndex < questions.length - 1) {
         setQuizState(prev => ({
           ...prev,

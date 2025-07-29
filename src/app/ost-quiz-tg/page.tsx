@@ -6,7 +6,7 @@ import { OstQuiz } from "@/components/OstQuiz";
 import { generateOstQuiz } from "@/utils/ostAPI";
 import { useState, useEffect } from "react";
 import { useToast } from "@chakra-ui/react";
-import { OstType } from "@/app/api/getOst/types";
+import { OstType } from "@/lib/world-art-parser/types";
 
 declare global {
   interface Window {
@@ -159,8 +159,8 @@ export default function OstQuizTelegramPage() {
 
   return (
     <Container maxW="container.md" py={8}>
-      <OstQuiz 
-        translations={translations[language]} 
+      <OstQuiz
+        translations={translations[language]}
         language={language}
         questions={questions}
         isLoading={isLoading}

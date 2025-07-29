@@ -11,14 +11,14 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const update = await request.json();
-      
+
       if (update.message) {
-        await ctx.runAction(api.telegram.handleMessage, { 
+        await ctx.runAction(api.telegram.handleMessage, {
           chatId: update.message.chat.id,
           messageId: update.message.message_id,
         });
       }
-      
+
       if (update.callback_query) {
         await ctx.runAction(api.telegram.handleCallbackQuery, {
           callbackQuery: update.callback_query,
@@ -38,9 +38,9 @@ http.route({
   path: "/health",
   method: "GET",
   handler: httpAction(async (ctx, request) => {
-    return new Response(JSON.stringify({ 
-      status: "ok", 
-      timestamp: Date.now() 
+    return new Response(JSON.stringify({
+      status: "ok",
+      timestamp: Date.now()
     }), {
       status: 200,
       headers: { "Content-Type": "application/json" }

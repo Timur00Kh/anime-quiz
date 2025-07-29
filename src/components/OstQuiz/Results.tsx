@@ -12,7 +12,7 @@ import {
   SimpleGrid,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { OstType } from "@/app/api/getOst/types";
+import { OstType } from "@/lib/world-art-parser/types";
 
 const MotionBox = motion.div;
 
@@ -50,12 +50,12 @@ interface ResultsProps {
   onShare?: () => void;
 }
 
-export function Results({ 
-  score, 
-  totalQuestions, 
+export function Results({
+  score,
+  totalQuestions,
   questions,
   guessTimes,
-  translations: t, 
+  translations: t,
   language,
   onRestart,
   onShare
@@ -116,7 +116,7 @@ export function Results({
           {questions.map((question, index) => {
             const guessTime = guessTimes[index];
             const correctOption = question.options[question.correctAnswer];
-            
+
             return (
               <Card key={question.id}>
                 <CardBody>
@@ -150,14 +150,14 @@ export function Results({
                         p={2}
                         textAlign="center"
                       >
-                        {guessTime.isCorrect ? 
-                          (language === "en" ? "Correct" : "Правильно") : 
+                        {guessTime.isCorrect ?
+                          (language === "en" ? "Correct" : "Правильно") :
                           (language === "en" ? "Incorrect" : "Неправильно")}
                       </Badge>
                       {guessTime.isCorrect && guessTime.timeLeft !== null && (
                         <Text fontSize="sm" color="gray.600">
-                          {language === "en" ? 
-                            `Time bonus: +${guessTime.timeLeft}` : 
+                          {language === "en" ?
+                            `Time bonus: +${guessTime.timeLeft}` :
                             `Бонус времени: +${guessTime.timeLeft}`}
                         </Text>
                       )}

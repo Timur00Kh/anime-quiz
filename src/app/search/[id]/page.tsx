@@ -1,17 +1,14 @@
 "use client";
-import { Box, Center, Stack, Button, ButtonGroup, Card, CardBody, Heading } from "@chakra-ui/react";
+
 import { useEffect, useState } from "react";
-import {
-  getAnime,
-  getAnimeExternals,
-  IAnime,
-  IExternalLink,
-} from "@/utils/shikiAPI";
-import { useToastErr } from "@/utils/useToastErr";
-import { OST, OstType } from "@/app/api/getOst/types";
+import { Box, Button, ButtonGroup, Card, CardBody, Center, Heading, Stack } from "@chakra-ui/react";
+import { getAnime, getAnimeExternals, IAnime, IExternalLink } from "@/utils/shikiAPI";
+import { AnimeCard, AnimeCardSkeleton } from "@/components/AnimeCard";
 import { OSTCard } from "@/components/OSTCard";
 import { OSTSkeletonList } from "@/components/OSTSkeleton";
-import { AnimeCard, AnimeCardSkeleton } from "@/components/AnimeCard";
+import { useToastErr } from "@/utils/useToastErr";
+import { OstType, OST } from "@/lib/world-art-parser/types";
+import { getConvexApi } from "@/utils/convex";
 
 type FilterType = OstType | "ALL";
 
@@ -53,9 +50,14 @@ export default function Page({
             throw new Error("не удалось распарсить waId");
           }
 
-          const data = await fetch(`/api/getOst?waId=${waId}`).then((res) =>
-            res.json()
-          );
+          // Используем Convex action напрямую
+          const api = await getConvexApi();
+          if (!api) {
+            throw new Error("Convex API not available");
+          }
+
+          const { convex } = await import("@/utils/convex");
+          const data = await convex.action(api.worldArt.parseWorldArt, { waId });
           setOsts(data);
         } else {
           toastErr(new Error("У этого аниме нет WA"));
@@ -73,7 +75,7 @@ export default function Page({
       <Center>
         <Box maxW={600} w="100%">
           {anime === null ? <AnimeCardSkeleton /> : <AnimeCard anime={anime} />}
-          
+
           <Card mt={6}>
             <CardBody>
               <Heading size="sm" mb={4}>Filter OSTs</Heading>

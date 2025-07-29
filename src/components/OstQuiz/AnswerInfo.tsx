@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { SHIKIMORI_URL } from "@/utils/shikiAPI";
-import { OstType } from "@/app/api/getOst/types";
+import { OstType } from "@/lib/world-art-parser/types";
 
 interface AnswerInfoProps {
   question: {
@@ -68,12 +68,12 @@ export function AnswerInfo({ question, selectedAnswer, translations: t, language
             </Button>
           </Link>
         </Flex>
-        
+
         <Text fontWeight="bold">
           {language === "en" ? "Anime:" : "Аниме:"}{" "}
           {language === "en" ? correctOption.name : correctOption.russian}
         </Text>
-        
+
         <Text>
           {language === "en" ? "Track type:" : "Тип трека:"}{" "}
           {getOstTypeText(question.ostType)}

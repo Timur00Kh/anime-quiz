@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { OST } from '@/app/api/getOst/types';
+import { OST } from '@/lib/world-art-parser/types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -17,16 +17,16 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // Client with service role for storage operations
-export const serviceClient = supabaseServiceKey 
+export const serviceClient = supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      },
-      db: {
-        schema: 'public'
-      }
-    })
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    },
+    db: {
+      schema: 'public'
+    }
+  })
   : supabase;
 
 // Types for our database schema

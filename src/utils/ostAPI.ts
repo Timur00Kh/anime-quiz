@@ -1,5 +1,5 @@
 import { getAnime, getAnimeExternals, getAnimes, ShikiAPIAnimeSearch } from "./shikiAPI";
-import { OstType } from "../lib/world-art-parser/types";
+import { OstType, OST } from "../lib/world-art-parser/types";
 import { getConvexApi } from "./convex";
 
 interface OstSource {
@@ -34,22 +34,10 @@ export async function getAnimeOst(animeId: number): Promise<OstSource[]> {
     const waId = await getWorldArtId(animeId);
     if (!waId) return [];
 
-    // Используем Convex action
+    // Используем Convex action напрямую
     const api = await getConvexApi();
     if (!api) {
-      // Fallback к старому API если Convex недоступен
-      const response = await fetch(`/api/getOst?waId=${waId}`);
-      const osts = await response.json();
-
-      const filteredOsts = osts.filter((ost: any) => ost.type === OstType.OP || ost.type === OstType.ED);
-
-      return filteredOsts.map((ost: any) => ({
-        id: ost.id,
-        title: ost.title,
-        url: ost.videoUrl || `http://www.world-art.ru${ost.video}`,
-        animeId,
-        type: ost.type
-      }));
+      throw new Error("Convex API not available");
     }
 
     // Используем Convex action
@@ -57,11 +45,11 @@ export async function getAnimeOst(animeId: number): Promise<OstSource[]> {
     const osts = await convex.action(api.worldArt.parseWorldArt, { waId });
 
     // Фильтруем только OP и ED
-    const filteredOsts = osts.filter((ost: any) =>
+    const filteredOsts = osts.filter((ost: OST) =>
       ost.type === OstType.OP || ost.type === OstType.ED
     );
 
-    return filteredOsts.map((ost: any) => ({
+    return filteredOsts.map((ost: OST) => ({
       id: ost.id,
       title: ost.title,
       url: ost.videoUrl || `http://www.world-art.ru${ost.video}`,
@@ -86,11 +74,11 @@ export async function getAnimeOstConvex(animeId: number, convexClient: any): Pro
     const osts = await convexClient.action(api.worldArt.parseWorldArt, { waId });
 
     // Фильтруем только OP и ED
-    const filteredOsts = osts.filter((ost: any) =>
+    const filteredOsts = osts.filter((ost: OST) =>
       ost.type === OstType.OP || ost.type === OstType.ED
     );
 
-    return filteredOsts.map((ost: any) => ({
+    return filteredOsts.map((ost: OST) => ({
       id: ost.id,
       title: ost.title,
       url: ost.videoUrl || `http://www.world-art.ru${ost.video}`,

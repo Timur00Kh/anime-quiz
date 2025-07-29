@@ -1,5 +1,5 @@
 "use client";
-import { OstType } from "@/app/api/getOst/types";
+import { OstType } from "@/lib/world-art-parser/types";
 import { Container } from "@chakra-ui/react";
 import { useLanguage } from "@/utils/useLanguage";
 import { OstQuiz } from "@/components/OstQuiz";
@@ -123,8 +123,8 @@ export default function OstQuizPage() {
 
   return (
     <Container maxW="container.md" py={8}>
-      <OstQuiz 
-        translations={translations[language]} 
+      <OstQuiz
+        translations={translations[language]}
         language={language}
         questions={questions}
         isLoading={isLoading}
