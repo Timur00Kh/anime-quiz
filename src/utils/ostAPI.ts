@@ -1,5 +1,6 @@
-import { getAnime, getAnimeExternals, IExternalLink, getAnimes, ShikiAPIAnimeSearch } from "./shikiAPI";
-import { OST, OstType } from "@/app/api/getOst/types";
+import { getAnime, getAnimeExternals, getAnimes, ShikiAPIAnimeSearch } from "./shikiAPI";
+import { OstType } from "../lib/world-art-parser/types";
+import { getConvexApi } from "./convex";
 
 interface OstSource {
   id: number;
@@ -15,10 +16,9 @@ async function getWorldArtId(animeId: number): Promise<number | null> {
     const waExternal = externalLinks.find((e) => e.kind === "world_art");
 
     if (waExternal) {
-      const match = waExternal.url.match(/id=(\d)+/g);
+      const match = waExternal.url.match(/id=(\d+)/);
       if (match) {
-        const [idStr] = match;
-        return Number(idStr.split("=")[1]);
+        return Number(match[1]);
       }
     }
     return null;
@@ -28,26 +28,57 @@ async function getWorldArtId(animeId: number): Promise<number | null> {
   }
 }
 
+// Функция для работы с API (временно, до полной миграции на Convex)
 export async function getAnimeOst(animeId: number): Promise<OstSource[]> {
   try {
     const waId = await getWorldArtId(animeId);
     if (!waId) return [];
 
+    // Временно используем старый API endpoint
     const response = await fetch(`/api/getOst?waId=${waId}`);
-    const osts: OST[] = await response.json();
-    
+    const osts = await response.json();
+
     // Filter only OP and ED
-    const filteredOsts = osts.filter(ost => ost.type === OstType.OP || ost.type === OstType.ED);
-    
-    return filteredOsts.map(ost => ({
+    const filteredOsts = osts.filter((ost: any) => ost.type === OstType.OP || ost.type === OstType.ED);
+
+    return filteredOsts.map((ost: any) => ({
       id: ost.id,
       title: ost.title,
-      url: ost.videoUrl || `http://www.world-art.ru/${ost.video}`, // Prefer videoUrl, fallback to World-Art URL
+      url: ost.videoUrl || `http://www.world-art.ru${ost.video}`,
       animeId,
       type: ost.type
     }));
   } catch (error) {
     console.error("Error fetching anime OST:", error);
+    return [];
+  }
+}
+
+// Функция для работы с Convex (будет использоваться после миграции)
+export async function getAnimeOstConvex(animeId: number, convexClient: any): Promise<OstSource[]> {
+  try {
+    const waId = await getWorldArtId(animeId);
+    if (!waId) return [];
+
+    // Используем Convex action через динамический импорт
+    const api = await getConvexApi();
+    if (!api) throw new Error("Convex API not available");
+    const osts = await convexClient.action(api.worldArt.parseWorldArt, { waId });
+
+    // Фильтруем только OP и ED
+    const filteredOsts = osts.filter((ost: any) =>
+      ost.type === OstType.OP || ost.type === OstType.ED
+    );
+
+    return filteredOsts.map((ost: any) => ({
+      id: ost.id,
+      title: ost.title,
+      url: ost.videoUrl || `http://www.world-art.ru${ost.video}`,
+      animeId,
+      type: ost.type
+    }));
+  } catch (error) {
+    console.error("Error fetching anime OST via Convex:", error);
     return [];
   }
 }
@@ -68,13 +99,13 @@ async function getRandomAnime(count: number): Promise<ShikiAPIAnimeSearch[]> {
   const statuses = ['released', 'ongoing'] as const;
   const order = orders[Math.floor(Math.random() * orders.length)];
   const status = statuses[Math.floor(Math.random() * statuses.length)];
-  
+
   // Get significantly more anime than needed to ensure we have enough valid ones
   const limit = Math.min(500, count * 20);
-  
+
   // Use cache key that includes filters
   const cacheKey = `${order}-${status}-${limit}`;
-  
+
   if (animeSearchCache.has(cacheKey)) {
     const cached = animeSearchCache.get(cacheKey)!;
     return getRandomItems(cached, Math.min(cached.length, count * 2));
@@ -88,10 +119,10 @@ async function getRandomAnime(count: number): Promise<ShikiAPIAnimeSearch[]> {
       limit: limit,
       score: 7
     });
-    
+
     // Cache the results
     animeSearchCache.set(cacheKey, animes);
-    
+
     // Return random selection
     return getRandomItems(animes, Math.min(animes.length, count * 2));
   } catch (error) {
@@ -126,9 +157,9 @@ function isValidAnime(anime: ShikiAPIAnimeSearch): boolean {
   return Boolean(
     anime &&
     anime.id &&
-    anime.name && 
+    anime.name &&
     anime.name.trim() !== '' &&
-    anime.russian && 
+    anime.russian &&
     anime.russian.trim() !== ''
   );
 }
@@ -141,10 +172,10 @@ export async function generateOstQuiz(
   const usedAnimeIds = new Set<number>();
   let attempts = 0;
   const maxAttempts = 5; // Maximum number of attempts to get all questions
-  
+
   while (questions.length < numQuestions && attempts < maxAttempts) {
     attempts++;
-    
+
     // Pre-fetch some anime lists to minimize API calls
     onProgress?.(5 + (attempts - 1) * 20);
     const searchResults = await Promise.all([
@@ -153,33 +184,33 @@ export async function generateOstQuiz(
       getRandomAnime(numQuestions)
     ]);
     onProgress?.(20 + (attempts - 1) * 20);
-    
+
     // Combine and shuffle all anime, filtering out invalid entries
     const allAnime = shuffleArray(
       searchResults.flat()
         .filter(isValidAnime)
-        .filter((anime, index, self) => 
+        .filter((anime, index, self) =>
           self.findIndex(a => a.id === anime.id) === index
         )
     );
-    
+
     // Process anime until we have enough questions or run out of anime
     for (const anime of allAnime) {
       if (questions.length >= numQuestions) break;
       if (usedAnimeIds.has(anime.id)) continue;
-      
+
       try {
         const ostSources = await getAnimeOst(anime.id);
-        
+
         if (ostSources.length > 0) {
           // Get valid wrong options (ensuring they have proper names)
           const availableWrongOptions = allAnime
-            .filter(a => 
-              a.id !== anime.id && 
-              !usedAnimeIds.has(a.id) && 
+            .filter(a =>
+              a.id !== anime.id &&
+              !usedAnimeIds.has(a.id) &&
               isValidAnime(a)
             );
-            
+
           if (availableWrongOptions.length >= 3) {
             const wrongOptions = shuffleArray(availableWrongOptions)
               .slice(0, 3)
@@ -188,28 +219,28 @@ export async function generateOstQuiz(
                 name: a.name.trim(),
                 russian: a.russian.trim()
               }));
-              
+
             const correctOption = {
               id: anime.id,
               name: anime.name.trim(),
               russian: anime.russian.trim()
             };
-            
+
             // Try to maintain a balance between OP and ED
-            const unusedOsts = ostSources.filter(ost => 
+            const unusedOsts = ostSources.filter(ost =>
               !questions.some(q => q.id.includes(`${anime.id}-${ost.id}`))
             );
-            
+
             const lastQuestionType = questions.length > 0 ? questions[questions.length - 1].ostType : null;
             const preferredType = lastQuestionType === OstType.OP ? OstType.ED : OstType.OP;
-            
-            const randomOst = unusedOsts.find(ost => ost.type === preferredType) || 
-                            unusedOsts[Math.floor(Math.random() * unusedOsts.length)];
-            
+
+            const randomOst = unusedOsts.find(ost => ost.type === preferredType) ||
+              unusedOsts[Math.floor(Math.random() * unusedOsts.length)];
+
             if (randomOst) {
               const allOptions = shuffleArray([correctOption, ...wrongOptions]);
               const correctAnswerIndex = allOptions.findIndex(opt => opt.id === anime.id);
-              
+
               questions.push({
                 id: `${anime.id}-${randomOst.id}`,
                 ostUrl: randomOst.url,
@@ -217,28 +248,39 @@ export async function generateOstQuiz(
                 options: allOptions,
                 correctAnswer: correctAnswerIndex
               });
-              
+
               usedAnimeIds.add(anime.id);
               wrongOptions.forEach(opt => usedAnimeIds.add(opt.id));
             }
           }
         }
-        
+
         // Update progress based on how many questions we have
         const progress = Math.min(90, 20 + (70 * questions.length / numQuestions));
         onProgress?.(progress);
-        
+
       } catch (error) {
         console.error("Error generating quiz question:", error);
       }
     }
   }
-  
+
   // If we still don't have enough questions after all attempts, throw an error
   if (questions.length < numQuestions) {
     throw new Error(`Could not generate ${numQuestions} questions. Only got ${questions.length} valid questions.`);
   }
-  
+
   onProgress?.(100);
   return questions.slice(0, numQuestions); // Ensure we return exactly numQuestions
-} 
+}
+
+// Hook для использования в React компонентах (для будущего использования с Convex)
+export function useWorldArtParser() {
+  // Этот hook будет реализован после полной миграции на Convex
+  return {
+    parseAnime: async (waId: number) => {
+      console.log("Direct parser not yet implemented in client");
+      throw new Error("Use API endpoint for now");
+    }
+  };
+}
