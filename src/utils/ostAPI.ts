@@ -71,7 +71,7 @@ export async function getAnimeOstConvex(animeId: number, convexClient: any): Pro
     // Используем Convex action через динамический импорт
     const api = await getConvexApi();
     if (!api) throw new Error("Convex API not available");
-    const osts = await convexClient.action(api.worldArt.parseWorldArt, { waId });
+    const osts = await convexClient.action(api.worldArt.parseOstsFromWorldArt, { waId });
 
     // Фильтруем только OP и ED
     const filteredOsts = osts.filter((ost: OST) =>
@@ -172,6 +172,11 @@ function isValidAnime(anime: ShikiAPIAnimeSearch): boolean {
   );
 }
 
+/**
+ * @deprecated Use generateOstQuizConvex instead. This function will be removed in future versions.
+ * Старая функция генерации OST квиза. Использует клиентскую логику.
+ * Заменена на Convex-based генерацию для лучшей производительности.
+ */
 export async function generateOstQuiz(
   numQuestions: number = 10,
   onProgress?: (progress: number) => void
@@ -291,4 +296,213 @@ export function useWorldArtParser() {
       throw new Error("Use API endpoint for now");
     }
   };
+}
+
+// ============================================================================
+// НОВЫЕ CONVEX ФУНКЦИИ (РЕКОМЕНДУЕТСЯ К ИСПОЛЬЗОВАНИЮ)
+// ============================================================================
+
+import { api } from "../../convex/_generated/api";
+
+// Типы для новых Convex функций
+export interface OstQuizQuestion {
+  id: string;
+  ostUrl: string;
+  ostType: OstType;
+  correctAnswer: number;
+  options: Array<{
+    id: number;
+    name: string;
+    russian: string;
+  }>;
+  order: number;
+  animeId: number;
+  usageCount: number;
+}
+
+export interface OstQuiz {
+  quizId: string;
+  title: string;
+  questionCount: number;
+  questions: OstQuizQuestion[];
+}
+
+export interface GenerateOstQuizOptions {
+  questionCount?: number;
+  title?: string;
+  description?: string;
+  difficulty?: "easy" | "medium" | "hard";
+  tags?: string[];
+}
+
+export interface OstQuizResults {
+  quizId: string;
+  userId?: string;
+  score: number;
+  totalQuestions: number;
+  completedAt: number;
+  guessTimes: Array<{
+    questionIndex: number;
+    timeLeft?: number;
+    isCorrect: boolean;
+  }>;
+  telegramData?: {
+    chatId: number;
+    messageId: number;
+  };
+}
+
+/**
+ * Генерация OST квиза через Convex (рекомендуется)
+ * Использует 80% существующих вопросов + 20% новых для оптимизации
+ */
+export async function generateOstQuizConvex(
+  options: GenerateOstQuizOptions = {}
+): Promise<OstQuiz> {
+  try {
+    const { convex } = await import("./convex");
+
+    const result = await convex.action(api.ostQuiz.generateOstQuiz, {
+      questionCount: options.questionCount || 10,
+      title: options.title,
+      description: options.description,
+      difficulty: options.difficulty,
+      tags: options.tags || [],
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Error generating OST quiz via Convex:", error);
+    throw error;
+  }
+}
+
+/**
+ * Получение OST квиза по ID через Convex
+ */
+export async function getOstQuizConvex(quizId: string): Promise<OstQuiz | null> {
+  try {
+    const { convex } = await import("./convex");
+
+    const result = await convex.query(api.ostQuizMutations.getOstQuiz, {
+      quizId: quizId as any, // TODO: fix type
+    });
+
+    if (!result) return null;
+
+    // Преобразуем результат в нужный формат
+    return {
+      quizId: result.quiz._id,
+      title: result.quiz.title,
+      questionCount: result.quiz.questionCount,
+      questions: result.questions.map(q => ({
+        id: q._id,
+        ostUrl: q.ostUrl,
+        ostType: q.ostType as OstType,
+        correctAnswer: q.correctAnswer,
+        options: q.options,
+        order: (q as any).order || 0,
+        animeId: q.animeId,
+        usageCount: q.usageCount,
+      })),
+    };
+  } catch (error) {
+    console.error("Error getting OST quiz via Convex:", error);
+    return null;
+  }
+}
+
+/**
+ * Получение случайного OST квиза через Convex
+ */
+export async function getRandomOstQuizConvex(
+  difficulty?: "easy" | "medium" | "hard"
+): Promise<OstQuiz | null> {
+  try {
+    const { convex } = await import("./convex");
+
+    const result = await convex.query(api.ostQuizMutations.getRandomOstQuiz, {
+      difficulty,
+    });
+
+    if (!result) return null;
+
+    // Преобразуем результат в нужный формат
+    return {
+      quizId: result.quiz._id,
+      title: result.quiz.title,
+      questionCount: result.quiz.questionCount,
+      questions: result.questions.map(q => ({
+        id: q._id,
+        ostUrl: q.ostUrl,
+        ostType: q.ostType as OstType,
+        correctAnswer: q.correctAnswer,
+        options: q.options,
+        order: (q as any).order || 0,
+        animeId: q.animeId,
+        usageCount: q.usageCount,
+      })),
+    };
+  } catch (error) {
+    console.error("Error getting random OST quiz via Convex:", error);
+    return null;
+  }
+}
+
+/**
+ * Поиск существующих вопросов через Convex
+ */
+export async function findExistingQuestionsConvex(
+  animeId?: number,
+  ostType?: "OP" | "ED" | "TRAILER" | "UNRECOGNIZED",
+  limit: number = 10
+): Promise<OstQuizQuestion[]> {
+  try {
+    const { convex } = await import("./convex");
+
+    const result = await convex.query(api.ostQuizMutations.findExistingQuestions, {
+      animeId,
+      ostType,
+      limit,
+    });
+
+    // Преобразуем результат в нужный формат
+    return result.map(q => ({
+      id: q._id,
+      ostUrl: q.ostUrl,
+      ostType: q.ostType as OstType, // Преобразуем строку в OstType
+      correctAnswer: q.correctAnswer,
+      options: q.options,
+      order: 0, // Вопросы из поиска не имеют порядка
+      animeId: q.animeId,
+      usageCount: q.usageCount,
+    }));
+  } catch (error) {
+    console.error("Error finding existing questions via Convex:", error);
+    return [];
+  }
+}
+
+/**
+ * Сохранение результатов OST квиза через Convex
+ */
+export async function saveOstQuizResults(results: OstQuizResults): Promise<string> {
+  try {
+    const { convex } = await import("./convex");
+
+    const result = await convex.mutation(api.ostQuizMutations.saveQuizResults, {
+      quizId: results.quizId as any, // TODO: fix type
+      userId: results.userId,
+      score: results.score,
+      totalQuestions: results.totalQuestions,
+      completedAt: results.completedAt,
+      guessTimes: results.guessTimes,
+      telegramData: results.telegramData,
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Error saving OST quiz results via Convex:", error);
+    throw error;
+  }
 }

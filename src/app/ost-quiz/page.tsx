@@ -3,33 +3,12 @@ import { OstType } from "@/lib/world-art-parser/types";
 import { Container } from "@chakra-ui/react";
 import { useLanguage } from "@/utils/useLanguage";
 import { OstQuiz } from "@/components/OstQuiz";
-import { generateOstQuiz } from "@/utils/ostAPI";
+import { generateOstQuizConvex } from "@/utils/ostAPI";
 import { useState } from "react";
 import { useToast } from "@chakra-ui/react";
 
-
-interface OstQuizQuestion {
-  id: string;
-  ostUrl: string;
-  ostType: OstType;
-  options: Array<{
-    id: number;
-    name: string;
-    russian: string;
-  }>;
-  correctAnswer: number;
-}
-
-interface OstQuizResults {
-  score: number;
-  totalQuestions: number;
-  questions: OstQuizQuestion[];
-  guessTimes: Array<{
-    questionIndex: number;
-    timeLeft: number | null;
-    isCorrect: boolean;
-  }>;
-}
+// Используем типы из ostAPI.ts
+import type { OstQuizQuestion, OstQuizResults } from "@/utils/ostAPI";
 
 const translations = {
   en: {
@@ -89,10 +68,15 @@ export default function OstQuizPage() {
     try {
       setIsLoading(true);
       setLoadingProgress(0);
-      const newQuestions = await generateOstQuiz(10, (progress) => {
-        setLoadingProgress(progress);
+
+      // Используем новую Convex функцию
+      const quiz = await generateOstQuizConvex({
+        questionCount: 10,
+        title: translations[language].title,
       });
-      setQuestions(newQuestions);
+
+      setQuestions(quiz.questions);
+      setLoadingProgress(100);
     } catch (error) {
       toast({
         title: translations[language].loading,

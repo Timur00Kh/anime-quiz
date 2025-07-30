@@ -19,7 +19,7 @@ src/lib/world-art-parser/
 ### Convex Backend
 ```
 convex/
-├── schema.ts       # Схема БД (waParseLog, quizResults)
+├── schema.ts       # Схема БД (waOstParseLog, quizResults)
 ├── worldArt.ts     # Functions для работы с парсером
 ├── telegram.ts     # Telegram webhook handlers
 ├── http.ts         # HTTP endpoints

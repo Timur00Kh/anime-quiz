@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Box, Button, ButtonGroup, Card, CardBody, Center, Heading, Stack } from "@chakra-ui/react";
 import { getAnime, getAnimeExternals, IAnime, IExternalLink } from "@/utils/shikiAPI";
 import { AnimeCard, AnimeCardSkeleton } from "@/components/AnimeCard";
 import { OSTCard } from "@/components/OSTCard";
 import { OSTSkeletonList } from "@/components/OSTSkeleton";
 import { useToastErr } from "@/utils/useToastErr";
-import { OstType, OST } from "@/lib/world-art-parser/types";
-import { getConvexApi } from "@/utils/convex";
+import { OstType } from "@/lib/world-art-parser/types";
+import { api } from "@@convex/_generated/api";
+import { useAction, useQuery } from "convex/react";
+
 
 type FilterType = OstType | "ALL";
 
-export default function Page({
+export default function AnimePage({
   params,
   searchParams,
 }: {
@@ -22,10 +24,28 @@ export default function Page({
   const id = Number(params.id);
   const [anime, setAnime] = useState<IAnime | null>(null);
   const [animeExternals, setAnimeExternals] = useState<IExternalLink[]>([]);
-  const [osts, setOsts] = useState<OST[]>([]);
+  const waId = useMemo(() => {
+    const waExternal = animeExternals.find((e) => e.kind === "world_art");
+    if (waExternal) {
+      const match = waExternal.url.match(/id=(\d)+/g);
+      if (match) {
+        return Number(match[0].split("=")[1]);
+      }
+    }
+    return undefined;
+  }, [animeExternals]);
+
   const [selectedType, setSelectedType] = useState<FilterType>("ALL");
-  const [isLoadingOsts, setIsLoadingOsts] = useState(false);
   const toastErr = useToastErr();
+  const parseOsts = useAction(api.worldArt.parseOstsFromWorldArt);
+  const osts = useQuery(api.worldArt.getAnimeOst, { waId });
+  const isLoadingOsts = useMemo(() => Boolean(osts), [osts])
+
+  useEffect(() => {
+    if (waId && !isLoadingOsts) {
+      parseOsts({ waId, shikimoriId: id });
+    }
+  }, [waId, id, parseOsts, osts]);
 
   useEffect(() => {
     (async () => {
@@ -34,38 +54,10 @@ export default function Page({
         .catch(toastErr);
 
       try {
-        setIsLoadingOsts(true);
         const externalLinks = (await getAnimeExternals(id)) || [];
         setAnimeExternals(externalLinks);
-        const waExternal = externalLinks.find((e) => e.kind === "world_art");
-
-        if (waExternal) {
-          let waId;
-
-          const match = waExternal.url.match(/id=(\d)+/g);
-          if (match) {
-            const [idStr] = match;
-            waId = Number(idStr.split("=")[1]);
-          } else {
-            throw new Error("не удалось распарсить waId");
-          }
-
-          // Используем Convex action напрямую
-          const api = await getConvexApi();
-          if (!api) {
-            throw new Error("Convex API not available");
-          }
-
-          const { convex } = await import("@/utils/convex");
-          const data = await convex.action(api.worldArt.parseWorldArt, { waId });
-          setOsts(data);
-        } else {
-          toastErr(new Error("У этого аниме нет WA"));
-        }
       } catch (e) {
         toastErr(new Error(e instanceof Error ? e.message : String(e)));
-      } finally {
-        setIsLoadingOsts(false);
       }
     })();
   }, [id, toastErr]);
@@ -109,7 +101,7 @@ export default function Page({
           </Card>
 
           <Stack spacing={4} mt={4}>
-            {isLoadingOsts ? (
+            {!osts ? (
               <OSTSkeletonList />
             ) : (
               osts
