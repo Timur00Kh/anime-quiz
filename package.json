@@ -1,49 +1,26 @@
 {
-  "name": "anime-quiz",
-  "version": "0.1.0",
+  "name": "anime-quiz-monorepo",
+  "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "npm-run-all --parallel convex:dev next:dev",
-    "convex:dev": "convex dev",
-    "next:dev": "next dev",
-    "build": "convex deploy && next build",
-    "start": "next start",
-    "lint": "next lint",
-    "test:parser": "tsx scripts/test-parser.ts",
-    "test:parser:single": "tsx scripts/test-parser.ts",
-    "test:simple": "tsx scripts/simple-test.ts",
-    "parser:clear-cache": "tsx scripts/test-parser.ts clear-cache",
-    "validate:migration": "tsx scripts/validate-migration.ts"
-  },
-  "dependencies": {
-    "@chakra-ui/icons": "^2.0.19",
-    "@chakra-ui/react": "^2.7.0",
-    "@convex-dev/aggregate": "^0.1.21",
-    "@emotion/react": "^11.11.1",
-    "@emotion/styled": "^11.11.0",
-    "@supabase/supabase-js": "^2.49.8",
-    "@types/react": "18.2.9",
-    "@types/react-dom": "18.2.4",
-    "@uidotdev/usehooks": "^2.0.1",
-    "cheerio": "^1.0.0-rc.12",
-    "convex": "^1.25.4",
-    "dotenv": "^16.5.0",
-    "eslint": "8.42.0",
-    "eslint-config-next": "13.4.4",
-    "framer-motion": "^10.18.0",
-    "next": "13.4.4",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-icons": "^5.5.0",
-    "telegraf": "^4.16.3"
+    "dev": "concurrently \"npm run dev:web\" \"npm run dev:shiki\" \"npm run dev:convex\"",
+    "dev:web": "npm run dev --workspace=web",
+    "dev:shiki": "npm run dev --workspace=shiki-api",
+    "dev:convex": "npm run dev --workspace=convex-backend",
+    "build": "npm run build --workspaces",
+    "build:web": "npm run build --workspace=web",
+    "build:shiki": "npm run build --workspace=shiki-api",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces"
   },
   "devDependencies": {
-    "@types/cheerio": "^0.22.35",
-    "@types/node": "^22.15.21",
-    "npm-run-all": "^4.1.5",
-    "prettier": "^2.8.8",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }

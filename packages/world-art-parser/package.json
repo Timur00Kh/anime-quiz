@@ -1,0 +1,25 @@
+{
+    "name": "world-art-parser",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "test": "jest",
+        "test:watch": "jest --watch"
+    },
+    "dependencies": {
+        "cheerio": "^1.0.0-rc.12",
+        "shared": "file:../shared"
+    },
+    "devDependencies": {
+        "@types/cheerio": "^0.22.35",
+        "@types/node": "^22.15.21",
+        "typescript": "^5.8.3",
+        "jest": "^29.7.0",
+        "@types/jest": "^29.5.8",
+        "ts-jest": "^29.1.1"
+    }
+}
